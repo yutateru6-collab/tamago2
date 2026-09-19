@@ -20,14 +20,15 @@ function goal(){return GOALS[Math.min(state.sessions,GOALS.length-1)];}
 function rect(x,y,w,h,fill){return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}"/>`;}
 function sprite(frame=mood()){
   const p=palette;let parts='';
-  parts+=rect(6,6,5,8,p.outline)+rect(21,6,5,8,p.outline);
-  parts+=rect(7,7,3,7,p.fur2)+rect(22,7,3,7,p.fur2);
-  parts+=rect(8,9,16,15,p.outline)+rect(9,10,14,14,p.fur);
-  parts+=rect(10,11,12,4,p.fur2);
-  parts+=rect(11,19,10,5,p.cream);
-  parts+=rect(7,22,5,5,p.outline)+rect(20,22,5,5,p.outline);
-  parts+=rect(8,22,4,4,p.fur)+rect(20,22,4,4,p.fur);
-  parts+=rect(21,18,5,7,p.bag);
+  parts+='<path d="M6 4h4v6h2V8h8v2h2V4h4v10h2v8h-3v4h-3v3H10v-2H7v-5H4v-8h2z" fill="'+p.outline+'"/>';
+  parts+='<path d="M7 5h2v7h4v-2h6v2h4V5h2v10h1v6h-3v4h-3v2H11v-2H8v-4H6v-6h1z" fill="'+p.fur+'"/>';
+  parts+=rect(8,6,1,6,p.fur2)+rect(23,6,1,6,p.fur2);
+  parts+=rect(9,11,14,4,p.fur2);
+  parts+=rect(11,20,10,6,p.cream);
+  parts+=rect(7,24,5,3,p.outline)+rect(20,24,5,3,p.outline);
+  parts+=rect(8,23,4,3,p.fur)+rect(20,23,4,3,p.fur);
+  parts+=rect(22,18,5,7,p.bag);
+  parts+=rect(5,19,2,3,p.fur2);
   if(frame==='blink'){
     parts+=rect(11,14,3,1,p.eye)+rect(18,14,3,1,p.eye);
   }else if(frame==='happy'){
@@ -62,8 +63,8 @@ function render(){
         <section class="stats"><div class="stat"><small>休んだ時間</small><strong data-stat="minutes"></strong></div><div class="stat"><small>暮らし</small><strong data-stat="stage"></strong></div><div class="stat"><small>元気</small><strong data-stat="vitality"></strong></div></section>
         <section class="goal"><small>つぎの楽しみ</small><strong data-goal></strong></section>
         <section class="actions"><button class="primary" data-action="rest">30分、スマホを置く</button><button class="secondary" data-action="overuse">今日は見すぎた（自己申告）</button><p class="note">Web版は他アプリの使用を検知しません。休めた時間も、使いすぎも自己申告です。</p></section>
-        <section class="dev"><h3>DEV · 少数フレームで状態を試す</h3><div class="dev-grid"><button data-frame="idle">idle</button><button data-frame="blink">blink</button><button data-frame="happy">happy</button><button data-frame="tired">tired</button><button data-frame="craft">craft</button><button class="advance" data-action="advance">30分経過させる</button></div></section>
-        <section class="rest-overlay" hidden><div class="rest-sprite"></div><h2>画面を閉じて、大丈夫。</h2><p>この子はここで待っています。<br>戻ったら「休めた」と教えてください。</p><div class="timer">30:00</div><button class="primary" data-action="complete" hidden>30分、休めた</button><button class="secondary" data-action="cancel">今回はやめる</button></section>
+        <section class="dev"><h3>DEV · 少数フレームで状態を試す</h3><div class="dev-grid"><button data-frame="idle">idle</button><button data-frame="blink">blink</button><button data-frame="happy">happy</button><button data-frame="tired">tired</button><button data-frame="craft">craft</button><button class="advance" data-action="advance">休息を開始して30分経過</button></div></section>
+        <section class="rest-overlay" hidden><div class="rest-sprite"></div><h2>画面を閉じて、大丈夫。</h2><p>この子はここで待っています。<br>戻ったら「休めた」と教えてください。</p><div class="timer">30:00</div><button class="primary" data-action="complete" hidden>30分、休めた</button><button class="secondary rest-dev" data-action="advance-overlay" hidden>30分経過させる</button><button class="secondary" data-action="cancel">今回はやめる</button></section>
         <div class="toast" hidden></div>
       </div>`;
     bind();
@@ -77,6 +78,7 @@ function render(){
   document.querySelector('[data-stat="vitality"]').textContent=`${state.vitality}/100`;
   document.querySelector('[data-goal]').textContent=goal();
   document.querySelector('.dev').classList.toggle('on',dev);
+  document.querySelector('.rest-dev').hidden=!dev;
   document.querySelector('.rest-overlay').hidden=!state.quiet;
   if(state.quiet) document.querySelector('.rest-sprite').innerHTML=sprite('idle');
   updateTimer();
@@ -86,7 +88,9 @@ function bind(){
   document.querySelector('[data-action="complete"]').onclick=completeRest;
   document.querySelector('[data-action="cancel"]').onclick=cancelRest;
   document.querySelector('[data-action="overuse"]').onclick=reportOveruse;
-  document.querySelector('[data-action="advance"]').onclick=()=>{if(!state.quiet)startRest();state.quiet.endsAt=Date.now()-1;save();updateTimer();};
+  const advance=()=>{if(!state.quiet)startRest();state.quiet.endsAt=Date.now()-1;save();updateTimer();};
+  document.querySelector('[data-action="advance"]').onclick=advance;
+  document.querySelector('[data-action="advance-overlay"]').onclick=advance;
   document.querySelectorAll('[data-frame]').forEach(b=>b.onclick=()=>{forcedFrame=b.dataset.frame;render();setTimeout(()=>{forcedFrame=null;render();},1800);});
 }
 function startRest(){
