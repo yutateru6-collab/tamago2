@@ -4,12 +4,14 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "dev": "vite --host 0.0.0.0",
     "test": "playwright test",
     "deploy": "wrangler deploy",
     "preview": "wrangler dev"
   },
   "devDependencies": {
     "@playwright/test": "1.61.1",
+    "vite": "7.1.7",
     "wrangler": "4.135.0"
   }
 }
