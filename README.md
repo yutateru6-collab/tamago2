@@ -12,3 +12,9 @@
 
 ## 最初のプロトタイプ
 1キャラ、1部屋、idle/blink/happy/tired/craft の軽量状態表現と、30分休息・成長・開発者用早送りを実装する。
+
+
+## Cloudflare Workers
+Cloudflare Workers Static Assets で配信する。公開対象はリポジトリ直下の `index.html` / `app.js` / `styles.css` のみで、`.assetsignore` により `node_modules`、テスト、GitHub Actions、ドキュメント等を除外する。
+
+Deploy command: `npx wrangler deploy`
