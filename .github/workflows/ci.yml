@@ -1,29 +1,56 @@
-name: Verify Tamago2 Virtual Pet
+name: Verify Tamago2 Care Edition
 on:
   push:
   pull_request:
 permissions:
   contents: read
+concurrency:
+  group: tamago2-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
       - run: npm install
-      - name: Validate Cloudflare static-asset deploy
-        run: npx wrangler deploy --dry-run
+      - run: npm run test:unit
+      - run: npm run build
+      - name: Validate only public assets are deployed
+        run: |
+          npx wrangler deploy --dry-run
+          test "$(find dist -type f | wc -l)" -eq 8
       - run: npx playwright install --with-deps chromium webkit
+      - name: Japanese screenshot fonts
+        run: sudo apt-get install -y fonts-noto-cjk
       - run: npm test
+      - name: Inspect current public endpoint
+        if: always()
+        run: |
+          node --input-type=module -e "try {const r=await fetch('https://tamago2.itisnowornever271.workers.dev/',{signal:AbortSignal.timeout(12000)});const t=await r.text();console.log(JSON.stringify({url:r.url,status:r.status,title:t.match(/<title>(.*?)<\/title>/)?.[1],newEdition:t.includes('care-20260920-01')}));}catch(e){console.log('Public endpoint probe:',e.message)}"
+      - name: Verify Cloudflare serves the tested main commit
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: npm run verify:live
+      - name: Test real deployed UI
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          BASE_URL: https://tamago2.itisnowornever271.workers.dev
+        run: npx playwright test --grep '@live'
+      - name: Prepare inspectable source bundle
+        if: always()
+        run: |
+          mkdir -p test-results/source
+          cp index.html app.js engine.js sprites.js styles.css package.json wrangler.jsonc test-results/source/
+          cp -r scripts tests test-results/source/
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: tamago2-visual-screenshots
-          path: test-results/visual/
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report
-          path: playwright-report/
+          name: tamago2-care-verification
+          path: |
+            test-results/
+            playwright-report/
+            dist/
+          retention-days: 14

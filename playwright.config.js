@@ -1,8 +1,3 @@
-import { defineConfig } from '@playwright/test';
-export default defineConfig({
-  testDir:'./tests',
-  timeout:30000,
-  use:{baseURL:'http://127.0.0.1:4173',viewport:{width:390,height:844},screenshot:'only-on-failure'},
-  projects:[{name:'chromium',use:{browserName:'chromium'}},{name:'webkit',use:{browserName:'webkit'}}],
-  webServer:{command:'python3 -m http.server 4173 --bind 127.0.0.1',url:'http://127.0.0.1:4173',reuseExistingServer:false}
-});
+import { defineConfig, devices } from '@playwright/test';
+const baseURL=process.env.BASE_URL || 'http://127.0.0.1:5173';
+export default defineConfig({testDir:'./tests',testMatch:'**/app.spec.js',fullyParallel:false,workers:2,retries:0,timeout:30000,reporter:[['list'],['html',{open:'never'}]],use:{baseURL,viewport:{width:390,height:844},screenshot:'only-on-failure',trace:'retain-on-failure'},projects:[{name:'chromium',use:{...devices['iPhone 13'],defaultBrowserType:'chromium'}},{name:'webkit',use:{...devices['iPhone 13']}}],webServer:process.env.BASE_URL?undefined:{command:'npm run build && npm run dev',url:baseURL,reuseExistingServer:!process.env.CI}});
