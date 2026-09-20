@@ -1,16 +1,14 @@
 {
-  "name": "tamago2",
+  "name": "tamago2-preview",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.5.0-preview",
   "type": "module",
   "scripts": {
-    "dev": "node scripts/serve.mjs",
-    "build": "node scripts/build.mjs",
-    "test:unit": "node --test tests/engine.test.js tests/journey.test.js",
+    "dev": "node preview-build.mjs && node scripts/serve.mjs",
+    "build": "node preview-build.mjs",
+    "test:unit": "node --test tests/engine.test.js tests/journey.test.js tests/life.test.js",
     "test": "playwright test",
-    "deploy": "wrangler deploy",
-    "preview": "wrangler dev",
-    "verify:live": "node scripts/verify-live.mjs"
+    "preview": "wrangler dev"
   },
   "devDependencies": {
     "@playwright/test": "1.61.1",
