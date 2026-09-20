@@ -1,15 +1,5 @@
 {
-  "name": "tamago2",
-  "private": true,
-  "version": "0.1.0",
-  "type": "module",
-  "scripts": {
-    "test": "playwright test",
-    "deploy": "wrangler deploy",
-    "preview": "wrangler dev"
-  },
-  "devDependencies": {
-    "@playwright/test": "1.61.1",
-    "wrangler": "4.135.0"
-  }
+  "name": "tamago2", "private": true, "version": "0.3.0", "type": "module",
+  "scripts": { "dev": "node scripts/serve.mjs", "build": "node scripts/build.mjs", "test:unit": "node --test tests/engine.test.js", "test": "playwright test", "deploy": "wrangler deploy", "preview": "wrangler dev", "verify:live": "node scripts/verify-live.mjs" },
+  "devDependencies": { "@playwright/test": "1.61.1", "wrangler": "4.135.0" }
 }

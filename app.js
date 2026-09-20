@@ -1,121 +1,241 @@
-const KEY='tamago2.pixel.v1';
-const GOALS=[
-  '木のランプをつくる','宝物の棚をつくる','小さな植物を育てる',
-  '葉っぱの額縁を飾る','やわらかな座布団を置く','お茶の時間をつくる','もっと暮らしを育てる'
-];
-const REWARDS=['木のランプ','宝物の棚','小さな植物','葉っぱの額縁','やわらかな座布団','お茶セット'];
-const palette={outline:'#22332d',fur:'#5e8f82',fur2:'#7eb1a2',cream:'#f0dfb8',eye:'#182723',bag:'#9c684b',coral:'#c67663',hammer:'#d2b16f'};
-let state=load();
-let forcedFrame=null;
-let reactionTimer=null;
-const dev=new URLSearchParams(location.search).get('dev')==='1';
-
-function fresh(){return{version:1,sessions:0,quietMinutes:0,vitality:70,overuse:0,quiet:null};}
-function load(){try{const v=JSON.parse(localStorage.getItem(KEY));return v&&v.version===1?v:fresh();}catch{return fresh();}}
-function save(){localStorage.setItem(KEY,JSON.stringify(state));}
-function stage(){return Math.min(6,state.sessions);}
-function mood(){return state.vitality<40?'tired':'idle';}
-function goal(){return GOALS[Math.min(state.sessions,GOALS.length-1)];}
-
-function rect(x,y,w,h,fill){return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}"/>`;}
-function sprite(frame=mood()){
-  const p=palette;let parts='';
-  parts+='<path d="M6 4h4v6h2V8h8v2h2V4h4v10h2v8h-3v4h-3v3H10v-2H7v-5H4v-8h2z" fill="'+p.outline+'"/>';
-  parts+='<path d="M7 5h2v7h4v-2h6v2h4V5h2v10h1v6h-3v4h-3v2H11v-2H8v-4H6v-6h1z" fill="'+p.fur+'"/>';
-  parts+=rect(8,6,1,6,p.fur2)+rect(23,6,1,6,p.fur2);
-  parts+=rect(9,11,14,4,p.fur2);
-  parts+=rect(11,20,10,6,p.cream);
-  parts+=rect(7,24,5,3,p.outline)+rect(20,24,5,3,p.outline);
-  parts+=rect(8,23,4,3,p.fur)+rect(20,23,4,3,p.fur);
-  parts+=rect(22,18,5,7,p.bag);
-  parts+=rect(5,19,2,3,p.fur2);
-  if(frame==='blink'){
-    parts+=rect(11,14,3,1,p.eye)+rect(18,14,3,1,p.eye);
-  }else if(frame==='happy'){
-    parts+=rect(11,13,1,1,p.eye)+rect(13,14,1,1,p.eye)+rect(18,14,1,1,p.eye)+rect(20,13,1,1,p.eye);
-    parts+=rect(15,17,2,1,p.coral);
-  }else if(frame==='tired'){
-    parts+=rect(11,14,3,1,p.eye)+rect(18,14,3,1,p.eye)+rect(14,18,4,1,p.eye);
-    parts+=rect(5,5,5,3,p.fur)+rect(22,5,5,3,p.fur);
-  }else{
-    parts+=rect(11,13,3,3,p.eye)+rect(18,13,3,3,p.eye);
-    parts+=rect(12,13,1,1,'#dce9df')+rect(19,13,1,1,'#dce9df');
-    parts+=rect(15,17,2,1,p.eye);
+import { RELEASE, STAGES, fresh, normalize, hatch, advance, recompute, care, condition, attention, restReward, startRest, confirmRest } from './engine.js';
+import { icon, pet } from './sprites.js';
+const DEV = new URLSearchParams(location.search).get('dev') === '1';
+const KEY = DEV ? 'tamago2.care.v3.demo' : 'tamago2.care.v3';
+const $ = selector => document.querySelector(selector);
+const menus = [ ['food','meal','ごはん'], ['toilet','toilet','トイレ'], ['medicine','medicine','くすり'], ['light','light','でんき'], ['play','play','あそぶ'], ['status','status','ようす'], ['discipline','discipline','しつけ'], ['rest','rest','おやすみ'] ];
+let s = load();
+let visible = document.visibilityState === 'visible';
+let lastSave = 0;
+let ui = { selected: 0, panel: '', choice: 0, motion: '', until: 0, message: '', messageUntil: 0, event: '', gameTarget: 0 };
+let spriteSignature = '', panelSignature = '', wasteSignature = '', propSignature = '';
+function load() {
+  try {
+    let raw = localStorage.getItem(KEY);
+    if (!raw && !DEV) raw = localStorage.getItem('tamago2.pet.v2') || localStorage.getItem('tamago2.pixel.v1');
+    return normalize(raw ? JSON.parse(raw) : null);
+  } catch { return fresh(); }
+}
+function save(force = true) {
+  if (!force && Date.now() - lastSave < 5000) return;
+  try { localStorage.setItem(KEY, JSON.stringify(s)); lastSave = Date.now(); $('#save-warning').hidden = true; }
+  catch { $('#save-warning').hidden = false; }
+}
+function text(selector, value) { const el = $(selector); if (el && el.textContent !== String(value)) el.textContent = String(value); }
+function say(message, duration = 4500) { ui.message = message; ui.messageUntil = Date.now() + duration; }
+function animate(name, message = '') {
+  ui.motion = name; ui.until = Date.now() + 1800;
+  ui.event = name === 'evolve' ? 'しんか！' : name === 'decline' ? 'すこし たいか…' : '';
+  if (message) say(message);
+}
+function busy() { return ui.motion && Date.now() < ui.until; }
+function sync(now = Date.now(), initial = false) {
+  const before = s.form;
+  const elapsed = Math.max(0, now - s.lastAt) / 60000;
+  if (s.hatched && !s.dead) {
+    // A delayed/throttled callback is not proof the screen stayed on. Only charge
+    // small observed foreground intervals, treating uncertain gaps as offline.
+    if (!initial && visible && elapsed <= .17) advance(s, elapsed, { screen: true });
+    else advance(s, elapsed, { offline: true });
   }
-  if(frame==='craft'){
-    parts+=rect(4,18,6,2,p.outline)+rect(3,17,4,4,p.hammer)+rect(6,20,2,7,p.hammer);
-  }
-  return `<svg viewBox="0 0 32 32" role="img" aria-label="Soft Pixelの青緑色の小さなキャラクター">${parts}</svg>`;
+  s.lastAt = now;
+  if (hatch(s, now)) animate('evolve', 'うまれた！ まずはごはんをどうぞ。');
+  else if (s.hatched && !s.dead && s.form !== before && !busy()) animate(s.form > before ? 'evolve' : 'decline');
+  if (s.dead) { ui.motion = ''; ui.until = 0; if (ui.panel !== 'rebirth') ui.panel = ''; }
 }
+function menuMarkup(entries, offset) {
+  return entries.map(([id, glyph, label], i) => `<button class="menu-button" data-menu="${id}" data-index="${i + offset}" aria-label="${label}">${icon(glyph)}<span>${label}</span></button>`).join('');
+}
+$('#menus-top').innerHTML = menuMarkup(menus.slice(0,4),0);
+$('#menus-bottom').innerHTML = menuMarkup(menus.slice(4),4);
+$('#illness-icon').innerHTML = icon('skull');
+$('#demo-label').hidden = !DEV;
+$('#dev-panel').hidden = !DEV;
+text('#release', RELEASE);
 
-function render(){
-  const current=forcedFrame||mood();
-  const app=document.querySelector('#app');
-  if(!app.innerHTML){
-    app.innerHTML=`
-      <div class="app">
-        <header class="topbar"><div class="brand"><small>SOFT PIXEL TAMAGO</small><strong>こもれびの巣</strong></div><div class="level"></div></header>
-        <div class="room-wrap"><section class="room" data-stage="0" data-state="idle" aria-label="キャラクターの住処">
-          <div class="window"><span class="moon"></span></div><div class="floor-grid"></div>
-          <div class="decor lamp" aria-label="木のランプ"></div><div class="decor shelf" aria-label="宝物の棚"></div><div class="decor plant" aria-label="小さな植物"></div><div class="decor frame" aria-label="葉っぱの額縁"></div><div class="decor cushion" aria-label="座布団"></div><div class="decor tea" aria-label="お茶セット"></div>
-          <span class="state-chip"></span><div class="shadow"></div><div class="sprite-stage"></div><div class="growth-pop" hidden><span>✦</span></div>
-        </section></div>
-        <section class="stats"><div class="stat"><small>休んだ時間</small><strong data-stat="minutes"></strong></div><div class="stat"><small>暮らし</small><strong data-stat="stage"></strong></div><div class="stat"><small>元気</small><strong data-stat="vitality"></strong></div></section>
-        <section class="goal"><small>つぎの楽しみ</small><strong data-goal></strong></section>
-        <section class="actions"><button class="primary" data-action="rest">30分、スマホを置く</button><button class="secondary" data-action="overuse">今日は見すぎた（自己申告）</button><p class="note">Web版は他アプリの使用を検知しません。休めた時間も、使いすぎも自己申告です。</p></section>
-        <section class="dev"><h3>DEV · 少数フレームで状態を試す</h3><div class="dev-grid"><button data-frame="idle">idle</button><button data-frame="blink">blink</button><button data-frame="happy">happy</button><button data-frame="tired">tired</button><button data-frame="craft">craft</button><button class="advance" data-action="advance">休息を開始して30分経過</button></div></section>
-        <section class="rest-overlay" hidden><div class="rest-sprite"></div><h2>画面を閉じて、大丈夫。</h2><p>この子はここで待っています。<br>戻ったら「休めた」と教えてください。</p><div class="timer">30:00</div><button class="primary" data-action="complete" hidden>30分、休めた</button><button class="secondary rest-dev" data-action="advance-overlay" hidden>30分経過させる</button><button class="secondary" data-action="cancel">今回はやめる</button></section>
-        <div class="toast" hidden></div>
-      </div>`;
-    bind();
+function hearts(value) {
+  const n = Math.ceil(Math.max(0, Math.min(100,value)) / 25);
+  return `<span class="hearts" aria-label="4つ中${n}つ">${[0,1,2,3].map(i => `<span class="${i < n ? '' : 'empty'}">${icon('heart')}</span>`).join('')}</span>`;
+}
+function choice(id,label,glyph,index) {
+  return `<button class="panel-choice ${ui.choice === index ? 'chosen' : ''}" data-choice="${id}">${glyph ? icon(glyph) : ''}${label}</button>`;
+}
+function panelHTML() {
+  if (ui.panel === 'food') return '<h2 class="panel-title">なにを あげる？</h2><div class="panel-choices">' + choice('meal','ごはん','meal',0) + choice('snack','おやつ','snack',1) + '</div><p class="panel-small">A えらぶ / B あげる / C もどる</p>';
+  if (ui.panel === 'status') {
+    if (ui.choice === 1) return `<h2 class="panel-title">まめの きろく</h2><p class="panel-small">${s.generation}代目 / ${STAGES[s.form]}</p><p class="panel-small">休息（自己申告） ${Math.floor(s.restMinutes)}分</p><p class="panel-small">この画面の表示 ${Math.floor(s.screenMinutes)}分</p><p class="panel-small">A・Bでハートに戻る / C とじる</p>`;
+    return '<h2 class="panel-title">まめの ようす</h2>' + [['おなか',s.hunger],['ごきげん',s.happy],['けんこう',s.health],['しつけ',s.discipline]].map(([label,val]) => `<div class="status-row"><span>${label}</span>${hearts(val)}</div>`).join('') + '<p class="panel-small">A・B きろく / C とじる</p>';
   }
-  document.querySelector('.level').textContent=`暮らし Lv.${stage()+1}`;
-  const room=document.querySelector('.room');room.dataset.stage=String(stage());room.dataset.state=current;
-  document.querySelector('.state-chip').textContent=state.vitality<40?'ちょっと疲れぎみ':current==='happy'?'うれしそう':'のんびり';
-  document.querySelector('.sprite-stage').innerHTML=sprite(current);
-  document.querySelector('[data-stat="minutes"]').textContent=`${state.quietMinutes}分`;
-  document.querySelector('[data-stat="stage"]').textContent=`${stage()}/6`;
-  document.querySelector('[data-stat="vitality"]').textContent=`${state.vitality}/100`;
-  document.querySelector('[data-goal]').textContent=goal();
-  document.querySelector('.dev').classList.toggle('on',dev);
-  document.querySelector('.rest-dev').hidden=!dev;
-  document.querySelector('.rest-overlay').hidden=!state.quiet;
-  if(state.quiet) document.querySelector('.rest-sprite').innerHTML=sprite('idle');
-  updateTimer();
+  if (ui.panel === 'play') return '<h2 class="panel-title">どっちを むくかな？</h2><p class="panel-subtitle">1回だけの あっちむいてホイ</p><div class="panel-choices">' + choice('left','← ひだり','',0) + choice('right','みぎ →','',1) + '</div><p class="panel-small">A えらぶ / B きめる / C もどる</p>';
+  if (ui.panel === 'rest') {
+    if (!s.rest) return '';
+    if (Date.now() >= s.rest.readyAt) return '<h2 class="panel-title">30分、置けた？</h2><p class="panel-subtitle">スマホを使わず休めたか<br>自分で教えてください。</p><div class="panel-choices rest-options">' + choice('confirm-rest','置けた','',0) + choice('cancel-rest','置けなかった','',1) + '</div>';
+    return '<h2 class="panel-title">画面を閉じて ひと休み</h2><div id="rest-clock" class="rest-time">30:00</div><p class="panel-subtitle">他アプリの使用は判別できません。<br>戻ってから自己申告で確認します。</p><p class="panel-small">Cで中止 / 画面を閉じてもタイマーは継続</p>';
+  }
+  if (ui.panel === 'rebirth') return '<h2 class="panel-title">新しいたまごを迎える？</h2><p class="panel-subtitle">この子のお世話は終了し、<br>次の世代に進みます。</p><div class="panel-choices">' + choice('new-egg','迎える','egg',0) + choice('back','戻る','',1) + '</div>';
+  return '';
 }
-function bind(){
-  document.querySelector('[data-action="rest"]').onclick=startRest;
-  document.querySelector('[data-action="complete"]').onclick=completeRest;
-  document.querySelector('[data-action="cancel"]').onclick=cancelRest;
-  document.querySelector('[data-action="overuse"]').onclick=reportOveruse;
-  const advance=()=>{if(!state.quiet)startRest();state.quiet.endsAt=Date.now()-1;save();updateTimer();};
-  document.querySelector('[data-action="advance"]').onclick=advance;
-  document.querySelector('[data-action="advance-overlay"]').onclick=advance;
-  document.querySelectorAll('[data-frame]').forEach(b=>b.onclick=()=>{forcedFrame=b.dataset.frame;render();setTimeout(()=>{forcedFrame=null;render();},1800);});
+function render() {
+  if (ui.motion && Date.now() >= ui.until) { ui.motion = ''; ui.event = ''; }
+  const lcd = $('#lcd');
+  lcd.dataset.life = s.dead ? 'dead' : s.hatched ? 'pet' : 'egg';
+  lcd.dataset.form = String(s.form);
+  lcd.dataset.sleeping = String(s.sleeping);
+  lcd.dataset.sick = String(s.sick);
+  lcd.dataset.motion = ui.motion;
+  const sig = `${s.form}:${s.dead}:${s.hatched}`;
+  if (sig !== spriteSignature) { $('#pet-body').innerHTML = pet(s); spriteSignature = sig; }
+  if (String(s.poops) !== wasteSignature) {
+    $('#waste').innerHTML = Array.from({length:s.poops},() => `<span class="poop">${icon('poop')}</span>`).join('');
+    $('#waste').setAttribute('aria-label', `うんち ${s.poops}個`);
+    wasteSignature = String(s.poops);
+  }
+  $('#illness-icon').hidden = !s.sick || s.dead || s.sleeping;
+  $('#attention-light').classList.toggle('on', attention(s));
+  const prop = ['meal','snack','medicine'].includes(ui.motion) ? ui.motion : '';
+  if (prop !== propSignature) { $('#action-prop').innerHTML = prop ? icon(prop) : ''; propSignature = prop; }
+  text('#event-label',ui.event); $('#event-label').hidden = !ui.event;
+  text('#pet-age', `${s.generation}代目 · ${Math.floor(s.ageMinutes / 1440)}日`);
+  text('#pet-stage',s.dead ? 'おわかれ' : STAGES[s.form]);
+  text('#selection-label',menus[ui.selected][2]);
+  text('#lcd-message', Date.now() < ui.messageUntil ? ui.message : condition(s));
+  document.querySelectorAll('[data-menu]').forEach(b => {
+    const selected = Number(b.dataset.index) === ui.selected;
+    b.classList.toggle('selected', selected); b.setAttribute('aria-pressed', String(selected));
+  });
+  const html = panelHTML();
+  if (html !== panelSignature) { $('#screen-panel').innerHTML = html; panelSignature = html; }
+  $('#screen-panel').hidden = !html;
+  $('#scene').dataset.panel = ui.panel;
+  if ($('#rest-clock') && s.rest) {
+    const seconds = Math.max(0, Math.ceil((s.rest.readyAt-Date.now()) / 1000));
+    text('#rest-clock', `${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`);
+  }
+  text('#rest-button strong',s.rest ? Date.now() >= s.rest.readyAt ? '休めたか確認する' : '休息のタイマーを見る' : '30分、スマホを置く');
+  $('#rest-button').disabled = s.dead;
+  $('#rebirth').hidden = !s.dead;
+  if (DEV) text('#dev-readout', `FORM ${s.form} / HP ${Math.round(s.health)} / おなか ${Math.round(s.hunger)} / 休息 ${Math.floor(s.restMinutes)}分 / 表示 ${Math.floor(s.screenMinutes)}分 / うんち ${s.poops}`);
 }
-function startRest(){
-  if(!state.quiet){state.quiet={startedAt:Date.now(),endsAt:Date.now()+30*60*1000};save();}
-  render();
+function perform(kind) {
+  if (busy()) { say('もう少し待ってね。',1500); render(); return; }
+  sync();
+  const result = care(s,kind);
+  ui.panel = '';
+  say(result.message);
+  if (result.ok && result.animation) animate(result.animation);
+  save(); render();
 }
-function cancelRest(){state.quiet=null;save();render();}
-function completeRest(){
-  if(!state.quiet||Date.now()<state.quiet.endsAt)return;
-  const before=stage();state.sessions++;state.quietMinutes+=30;state.vitality=Math.min(100,state.vitality+12);state.quiet=null;save();
-  forcedFrame='happy';render();showGrowth(before<stage()?REWARDS[stage()-1]:'この子が元気になった');
-  clearTimeout(reactionTimer);reactionTimer=setTimeout(()=>{forcedFrame=null;render();},2200);
+function openRest() {
+  if (s.dead) return;
+  if (!s.rest) { sync(); startRest(s); save(); }
+  ui.panel = 'rest'; ui.choice = 0;
+  say('スマホを置く時間が この子を育てる。'); render();
 }
-function reportOveruse(){
-  if(!confirm('30分ぶん見すぎた、と自己申告しますか？'))return;
-  state.overuse++;state.vitality=Math.max(0,state.vitality-18);save();forcedFrame='tired';render();showToast('少し疲れたみたい。次の休息で戻せます。');
-  setTimeout(()=>{forcedFrame=null;render();},2200);
+function activate(id) {
+  if (id === 'rest') { openRest(); return; }
+  if (id === 'status') { ui.panel = 'status'; ui.choice = 0; render(); return; }
+  if (s.dead) { say('新しいたまごを迎えよう。'); render(); return; }
+  if (!s.hatched) { say('もうすぐうまれるよ。'); render(); return; }
+  if (s.sleeping && id !== 'light') { say('先に「でんき」をつけてね。'); render(); return; }
+  if (busy()) { say('もう少し待ってね。',1500); render(); return; }
+  if (id === 'food' || id === 'play') {
+    ui.panel = id; ui.choice = 0;
+    if (id === 'play') ui.gameTarget = Math.random() < .5 ? 0 : 1;
+    render(); return;
+  }
+  perform(id);
 }
-function updateTimer(){
-  if(!state.quiet)return;
-  const left=Math.max(0,Math.ceil((state.quiet.endsAt-Date.now())/1000));
-  const timer=document.querySelector('.timer');if(timer)timer.textContent=`${String(Math.floor(left/60)).padStart(2,'0')}:${String(left%60).padStart(2,'0')}`;
-  const complete=document.querySelector('[data-action="complete"]');if(complete)complete.hidden=left>0;
+function choose(id) {
+  if (id === 'meal' || id === 'snack') perform(id);
+  else if (id === 'left' || id === 'right') {
+    const won = (id === 'left' ? 0 : 1) === ui.gameTarget;
+    perform(won ? 'play-win' : 'play-lose');
+  } else if (id === 'confirm-rest') {
+    sync(); const before = s.form;
+    if (confirmRest(s)) { ui.panel = ''; animate(s.form > before ? 'evolve' : 'play','休めたね。成長に30分ぶん反映！'); save(); }
+    else say('30分たったら教えてね。');
+    render();
+  } else if (id === 'cancel-rest') { s.rest = null; ui.panel = ''; say('また いつでも休もう。'); save(); render(); }
+  else if (id === 'new-egg') { reset(false); }
+  else if (id === 'back') { ui.panel = ''; render(); }
 }
-function showGrowth(name){const pop=document.querySelector('.growth-pop');pop.hidden=false;showToast(`${name} が暮らしに増えました。`);setTimeout(()=>pop.hidden=true,1800);}
-function showToast(text){const t=document.querySelector('.toast');t.textContent=text;t.hidden=false;setTimeout(()=>t.hidden=true,2600);}
-function blinkLoop(){if(!forcedFrame&&!state.quiet&&mood()==='idle'){forcedFrame='blink';render();setTimeout(()=>{forcedFrame=null;render();},150);}setTimeout(blinkLoop,2600+Math.random()*3800);}
-setInterval(updateTimer,1000);render();setTimeout(blinkLoop,3200);
+function hardware(button) {
+  if (button === 'c') {
+    if (ui.panel === 'rest') {
+      if (s.rest && Date.now() < s.rest.readyAt) { say('中止しました。また休もう。'); s.rest = null; save(); }
+    }
+    ui.panel = ''; render(); return;
+  }
+  if (button === 'a') {
+    if (ui.panel) ui.choice = (ui.choice + 1) % 2;
+    else ui.selected = (ui.selected + 1) % menus.length;
+    render(); return;
+  }
+  if (button === 'b') {
+    if (!ui.panel) activate(menus[ui.selected][0]);
+    else if (ui.panel === 'food') choose(ui.choice ? 'snack' : 'meal');
+    else if (ui.panel === 'play') choose(ui.choice ? 'right' : 'left');
+    else if (ui.panel === 'status') { ui.choice = (ui.choice + 1) % 2; render(); }
+    else if (ui.panel === 'rest' && s.rest && Date.now() >= s.rest.readyAt) choose(ui.choice ? 'cancel-rest' : 'confirm-rest');
+    else if (ui.panel === 'rebirth') choose(ui.choice ? 'back' : 'new-egg');
+  }
+}
+function reset(demo = false) {
+  const generation = demo ? 1 : s.generation + 1;
+  s = fresh(Date.now(),generation);
+  ui = { selected:0,panel:'',choice:0,motion:'',until:0,message:'たまごが うごいている…',messageUntil:Date.now()+5000,event:'',gameTarget:0 };
+  save(); render();
+}
+function dev(action) {
+  if (!DEV) return;
+  ui.panel = ''; ui.motion = ''; ui.until = 0; ui.event = '';
+  if (action === 'reset') { reset(true); return; }
+  if (action === 'hatch') hatch(s,Date.now(),true);
+  else if (action === 'rest') { hatch(s,Date.now(),true); const old = s.form; restReward(s,30); animate(s.form > old ? 'evolve' : 'play','検証：30分休息'); }
+  else if (action === 'screen') { hatch(s,Date.now(),true); const old = s.form; advance(s,60,{screen:true}); animate(s.form < old ? 'decline' : '','検証：60分使用'); }
+  else if (action === 'hungry') { hatch(s,Date.now(),true); s.hunger = 8; say('検証：おなかを空かせました。'); }
+  else if (action === 'poop') { hatch(s,Date.now(),true); s.poops = Math.min(4,s.poops+1); s.clean = 100-s.poops*24; say('検証：うんちを追加しました。'); }
+  else if (action === 'sick') { hatch(s,Date.now(),true); s.sick = true; s.health = 20; say('検証：病気にしました。'); }
+  else if (action === 'death') { hatch(s,Date.now(),true); s.health = 0; say('お世話してくれて ありがとう。'); }
+  recompute(s); s.lastAt = Date.now(); save(); render();
+}
+document.addEventListener('click', event => {
+  const b = event.target.closest('button'); if (!b || b.disabled) return;
+  if (b.dataset.menu) { ui.selected = Number(b.dataset.index); activate(b.dataset.menu); }
+  else if (b.dataset.choice) choose(b.dataset.choice);
+  else if (b.dataset.hardware) hardware(b.dataset.hardware);
+  else if (b.dataset.dev) dev(b.dataset.dev);
+  else if (b.dataset.action === 'rest') openRest();
+  else if (b.dataset.action === 'help') $('#help-dialog').showModal();
+  else if (b.dataset.action === 'close-help') $('#help-dialog').close();
+  else if (b.dataset.action === 'rebirth') { ui.panel = 'rebirth'; ui.choice = 0; render(); $('#lcd').scrollIntoView({block:'center'}); }
+});
+document.addEventListener('keydown', e => {
+  if ($('#help-dialog').open || e.ctrlKey || e.metaKey || e.altKey) return;
+  const key = e.key.toLowerCase();
+  let action = key === 'a' || key === 'arrowright' ? 'a' : key === 'b' ? 'b' : key === 'c' || key === 'escape' ? 'c' : '';
+  if (key === 'enter' && e.target.tagName !== 'BUTTON') action = 'b';
+  if (action) { e.preventDefault(); hardware(action); }
+});
+document.addEventListener('visibilitychange', () => {
+  sync(); // Use the PREVIOUS visibility so the final foreground fraction is retained.
+  visible = document.visibilityState === 'visible';
+  s.lastAt = Date.now(); save(); render();
+});
+window.addEventListener('pagehide', () => { sync(); save(); });
+window.addEventListener('pageshow', () => { sync(Date.now(),true); visible = document.visibilityState === 'visible'; render(); });
+window.addEventListener('storage', e => {
+  if (e.key === KEY && e.newValue) {
+    try { s = normalize(JSON.parse(e.newValue)); render(); } catch {}
+  }
+});
+if (DEV) {
+  // No developer surface in normal mode. Demo state has its own storage key.
+  window.tamagoTest = {
+    snapshot: () => JSON.parse(JSON.stringify(s)),
+    readyRest: () => { const now=Date.now(); s.rest={startedAt:now-1800000,readyAt:now}; save(); render(); },
+    advance: (minutes, mode) => { advance(s,minutes,{screen:mode==='screen',offline:mode==='offline'}); s.lastAt=Date.now(); save(); render(); }
+  };
+}
+sync(Date.now(),true); save(); render();
+setInterval(() => { sync(); render(); save(false); },1000);
