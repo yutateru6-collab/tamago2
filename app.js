@@ -3,18 +3,22 @@ const LEGACY_KEY = 'tamago2.pixel.v1';
 const REST_BLOCK_MINUTES = 30;
 const FORM_THRESHOLDS = [0, 30, 90, 180, 300];
 const MENUS = [
-  { id: 'status', label: 'STATUS', icon: '♡' },
+  { id: 'status', label: 'STATUS', icon: '♥' },
   { id: 'clean', label: 'CLEAN', icon: '✦' },
   { id: 'rest', label: 'REST', icon: 'Z' },
-  { id: 'info', label: 'INFO', icon: '?' },
+  { id: 'info', label: 'INFO', icon: '?' }
 ];
 
 const dev = new URLSearchParams(location.search).get('dev') === '1';
 let state = load();
 let pose = 'idle';
-let effectTimer = null;
 let poseTimer = null;
+let effectTimer = null;
 let visibleSince = Date.now();
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
 
 function fresh() {
   const now = Date.now();
@@ -37,7 +41,7 @@ function fresh() {
     restSession: null,
     message: 'なにかが うごいている…',
     effect: '',
-    effectTone: 'good',
+    effectTone: 'good'
   };
 }
 
@@ -47,7 +51,7 @@ function migrateLegacy(v) {
   next.hatchAt = Date.now();
   next.restMinutes = Number(v.quietMinutes || 0);
   next.screenMinutes = Number(v.overuse || 0) * 30;
-  next.health = clamp(Number(v.vitality ?? 70), 0, 100);
+  next.health = clamp(Number(v.vitality == null ? 70 : v.vitality), 0, 100);
   next.mood = clamp(60 + Number(v.sessions || 0) * 5, 0, 100);
   next.clean = 88;
   next.form = computeForm(next);
@@ -60,12 +64,12 @@ function load() {
     const raw = localStorage.getItem(KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (parsed?.version === 2) return { ...fresh(), ...parsed };
+      if (parsed && parsed.version === 2) return Object.assign(fresh(), parsed);
     }
     const legacy = localStorage.getItem(LEGACY_KEY);
     if (legacy) {
       const parsedLegacy = JSON.parse(legacy);
-      if (parsedLegacy?.version === 1) return migrateLegacy(parsedLegacy);
+      if (parsedLegacy && parsedLegacy.version === 1) return migrateLegacy(parsedLegacy);
     }
   } catch {}
   return fresh();
@@ -73,10 +77,6 @@ function load() {
 
 function save() {
   localStorage.setItem(KEY, JSON.stringify(state));
-}
-
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
 }
 
 function score(s = state) {
@@ -128,14 +128,19 @@ function stateMessage() {
 }
 
 function rect(x, y, w, h, cls = 'ink') {
-  return `<rect class="${cls}" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+  return '<rect class="' + cls + '" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '"/>';
 }
 
 function eggSvg() {
-  return `<svg class="pixel-svg" viewBox="0 0 48 44" role="img" aria-label="揺れている卵">
-    <g>${rect(18,4,12,3)}${rect(13,7,22,4)}${rect(10,11,28,7)}${rect(8,18,32,14)}${rect(11,32,26,5)}${rect(16,37,16,3)}</g>
-    <g class="lcd-cut">${rect(20,16,4,3,'cut')}${rect(24,19,4,3,'cut')}${rect(19,22,5,3,'cut')}</g>
-  </svg>`;
+  return [
+    '<svg class="pixel-svg" viewBox="0 0 48 44" role="img" aria-label="揺れている卵">',
+    '<g>',
+    rect(18,4,12,3), rect(13,7,22,4), rect(10,11,28,7), rect(8,18,32,14),
+    rect(11,32,26,5), rect(16,37,16,3),
+    '</g><g class="lcd-cut">',
+    rect(20,16,4,3,'cut'), rect(24,19,4,3,'cut'), rect(19,22,5,3,'cut'),
+    '</g></svg>'
+  ].join('');
 }
 
 function petSvg(form = state.form, currentPose = pose) {
@@ -177,23 +182,28 @@ function petSvg(form = state.form, currentPose = pose) {
     px += rect(17, eyeY, 4, 5) + rect(27, eyeY, 4, 5);
     px += rect(18, eyeY, 1, 1, 'cut') + rect(28, eyeY, 1, 1, 'cut');
   }
+
   if (happy) px += rect(22,29,5,2);
   else if (sick) px += rect(21,29,7,2);
   else px += rect(23,28,3,3);
 
-  return `<svg class="pixel-svg" viewBox="0 0 48 44" role="img" aria-label="tamago2の育成キャラクター"><g>${px}</g></svg>`;
+  return '<svg class="pixel-svg" viewBox="0 0 48 44" role="img" aria-label="tamago2の育成キャラクター"><g>' + px + '</g></svg>';
 }
 
 function poopSvg(index) {
-  return `<svg class="poop-svg poop-${index + 1}" viewBox="0 0 16 16" aria-hidden="true">
-    ${rect(6,2,4,3)}${rect(4,5,8,3)}${rect(2,8,12,4)}${rect(1,12,14,2)}
-  </svg>`;
+  return [
+    '<svg class="poop-svg poop-', String(index + 1), '" viewBox="0 0 16 16" aria-hidden="true">',
+    rect(6,2,4,3), rect(4,5,8,3), rect(2,8,12,4), rect(1,12,14,2),
+    '</svg>'
+  ].join('');
 }
 
 function graveSvg() {
-  return `<svg class="pixel-svg grave-svg" viewBox="0 0 48 44" role="img" aria-label="動かなくなったキャラクター">
-    ${rect(15,10,18,4)}${rect(11,14,26,20)}${rect(8,34,32,4)}${rect(22,17,4,11)}${rect(18,21,12,4)}
-  </svg>`;
+  return [
+    '<svg class="pixel-svg grave-svg" viewBox="0 0 48 44" role="img" aria-label="動かなくなったキャラクター">',
+    rect(15,10,18,4), rect(11,14,26,20), rect(8,34,32,4), rect(22,17,4,11), rect(18,21,12,4),
+    '</svg>'
+  ].join('');
 }
 
 function render() {
@@ -203,121 +213,141 @@ function render() {
   const waste = Array.from({ length: Math.min(state.poops, 4) }, (_, i) => poopSvg(i)).join('');
   const character = state.dead ? graveSvg() : state.hatched ? petSvg() : eggSvg();
 
-  app.innerHTML = `
-    <div class="page-shell">
-      <header class="hero-copy">
-        <div class="brand-line"><span class="brand-dot"></span><strong>TAMAGO2</strong><span>prototype 01</span></div>
-        <h1>スマホを置くほど、<br><em>この子は育つ。</em></h1>
-        <p>触りすぎると弱る、汚れる、病気になる。<br>放っておきすぎれば、いつかお別れもくる。</p>
-      </header>
+  app.innerHTML = [
+    '<div class="page-shell">',
+      '<header class="hero-copy">',
+        '<div class="brand-line"><span class="brand-dot"></span><strong>TAMAGO2</strong><span>prototype 01</span></div>',
+        '<h1>スマホを置くほど、<br><em>この子は育つ。</em></h1>',
+        '<p>触りすぎると弱る、汚れる、病気になる。<br>放っておきすぎれば、いつかお別れもくる。</p>',
+      '</header>',
 
-      <section class="toy-shell" aria-label="育成端末">
-        <div class="toy-speaker" aria-hidden="true"><span></span><span></span><span></span></div>
-        <div class="toy-title">TAMAGO2</div>
-        <div class="lcd" data-life="${life}" data-condition="${conditionLabel()}">
-          <div class="lcd-top"><span>DAY ${String(dayNumber()).padStart(2, '0')}</span><span>${state.hatched ? `FORM ${state.form}` : 'EGG'}</span></div>
-          <div class="menu-strip" aria-label="メニュー">
-            ${MENUS.map((m, i) => `<button class="menu-icon ${i === state.selectedMenu ? 'selected' : ''}" data-menu-index="${i}" aria-label="${m.label}"><span>${m.icon}</span><small>${m.label}</small></button>`).join('')}
-          </div>
-          <div class="screen-scene">
-            <div class="pixel-cloud cloud-a"></div><div class="pixel-cloud cloud-b"></div>
-            <div class="waste-layer">${waste}</div>
-            <div class="pet-wander ${state.sick ? 'is-sick' : ''} ${state.dead ? 'is-dead' : ''}"><div class="pet-sprite ${life}">${character}</div></div>
-            <div class="ground-line"></div>
-            ${state.effect ? `<div class="screen-effect ${state.effectTone}">${state.effect}</div>` : ''}
-          </div>
-          <div class="lcd-message">${stateMessage()}</div>
-        </div>
-        <div class="hardware-buttons" aria-label="端末ボタン">
-          <button data-hardware="a" aria-label="Aボタン メニューを移動"><span>A</span></button>
-          <button data-hardware="b" aria-label="Bボタン 決定"><span>B</span></button>
-          <button data-hardware="c" aria-label="Cボタン 戻る"><span>C</span></button>
-        </div>
-        <div class="hardware-hints"><span>SELECT</span><span>OK</span><span>BACK</span></div>
-        <div class="selected-action">${selected.icon} ${selected.label}</div>
-      </section>
+      '<section class="toy-shell" aria-label="育成端末">',
+        '<div class="toy-speaker" aria-hidden="true"><span></span><span></span><span></span></div>',
+        '<div class="toy-title">TAMAGO2</div>',
+        '<div class="lcd" data-life="' + life + '" data-condition="' + conditionLabel() + '">',
+          '<div class="lcd-top"><span>DAY ' + String(dayNumber()).padStart(2,'0') + '</span><span>' + (state.hatched ? 'FORM ' + state.form : 'EGG') + '</span></div>',
+          '<div class="menu-strip" aria-label="メニュー">',
+            MENUS.map(function(m, i) {
+              return '<button class="menu-icon ' + (i === state.selectedMenu ? 'selected' : '') + '" data-menu-index="' + i + '" aria-label="' + m.label + '"><span>' + m.icon + '</span><small>' + m.label + '</small></button>';
+            }).join(''),
+          '</div>',
+          '<div class="screen-scene">',
+            '<div class="pixel-cloud cloud-a"></div><div class="pixel-cloud cloud-b"></div>',
+            '<div class="waste-layer">' + waste + '</div>',
+            '<div class="pet-wander ' + (state.sick ? 'is-sick ' : '') + (state.dead ? 'is-dead' : '') + '"><div class="pet-sprite ' + life + '">' + character + '</div></div>',
+            '<div class="ground-line"></div>',
+            state.effect ? '<div class="screen-effect ' + state.effectTone + '">' + state.effect + '</div>' : '',
+          '</div>',
+          '<div class="lcd-message">' + stateMessage() + '</div>',
+        '</div>',
+        '<div class="hardware-buttons" aria-label="端末ボタン">',
+          '<button data-hardware="a" aria-label="Aボタン メニューを移動"><span>A</span></button>',
+          '<button data-hardware="b" aria-label="Bボタン 決定"><span>B</span></button>',
+          '<button data-hardware="c" aria-label="Cボタン 戻る"><span>C</span></button>',
+        '</div>',
+        '<div class="hardware-hints"><span>SELECT</span><span>OK</span><span>BACK</span></div>',
+        '<div class="selected-action">' + selected.icon + ' ' + selected.label + '</div>',
+      '</section>',
 
-      <section class="meaning-card" aria-label="成長ルール">
-        <div><small>離れる時間</small><strong>↑ 進化</strong></div>
-        <div class="meaning-divider"></div>
-        <div><small>触りすぎ</small><strong>↓ 退化</strong></div>
-      </section>
+      '<section class="meaning-card" aria-label="成長ルール">',
+        '<div><small>離れる時間</small><strong>↑ 進化</strong></div>',
+        '<div class="meaning-divider"></div>',
+        '<div><small>触りすぎ</small><strong>↓ 退化</strong></div>',
+      '</section>',
 
-      <button class="rest-cta" data-action="rest" ${state.dead ? 'disabled' : ''}>
-        <span class="rest-icon">Z</span><span><strong>30分、スマホを置く</strong><small>閉じてOK。戻ったら自動で判定</small></span>
-      </button>
+      '<button class="rest-cta" data-action="rest" ' + (state.dead ? 'disabled' : '') + '>',
+        '<span class="rest-icon">Z</span>',
+        '<span><strong>30分、スマホを置く</strong><small>閉じてOK。戻ったら自動で判定</small></span>',
+      '</button>',
 
-      <section class="soft-status" aria-label="今の状態">
-        <div><small>成長</small><strong>${growthLabel()}</strong></div>
-        <div><small>体調</small><strong>${conditionLabel()}</strong></div>
-        <div><small>よごれ</small><strong>${state.poops === 0 ? 'c��れい' : state.poops >= 3 ? 'c��なり汚い' : '少しある'}</strong></div>
-      </section>
+      '<section class="soft-status" aria-label="今の状態">',
+        '<div><small>成長</small><strong>' + growthLabel() + '</strong></div>',
+        '<div><small>体調</small><strong>' + conditionLabel() + '</strong></div>',
+        '<div><small>よごれ</small><strong>' + (state.poops === 0 ? 'きれい' : state.poops >= 3 ? 'かなり汚い' : '少しある') + '</strong></div>',
+      '</section>',
 
-      ${state.dead ? `<button class="new-egg" data-action="reset">新しいたまごから始める</button>` : ''}
+      state.dead ? '<button class="new-egg" data-action="reset">新しいたまごから始める</button>' : '',
 
-      <details class="prototype-note">
-        <summary>この試作で計測できる範囲</summary>
-        <p><strong>Web版はiPhone全体のスクリーンタイムを読み取れません。</strong> 今は「30分スマホを置く」タイマーと、このページを開いている時間、開発用シミュレーションで成長ロジックを検証します。正式に端末全体の使用時間と連動するには、Webではなくネイティブ実装側の連携が必要です。</p>
-      </details>
+      '<details class="prototype-note">',
+        '<summary>この試作で計測できる範囲</summary>',
+        '<p><strong>Web版はiPhone全体のスクリーンタイムを読み取れません。</strong> 今は「30分スマホを置く」タイマーと、このページを開いている時間、開発用シミュレーションで成長ロジックを検証します。正式に端末全体の使用時間と連動するには、Webではなくネイティブ実装側の連携が必要です。</p>',
+      '</details>',
 
-      ${dev ? renderDev() : ''}
-    </div>
+      dev ? renderDev() : '',
+    '</div>',
+    state.restSession ? renderRestOverlay() : ''
+  ].join('');
 
-    ${state.restSession ? renderRestOverlay() : ''}
-  `;
   bind();
 }
 
 function renderDev() {
-  return `<section class="dev-panel">
-    <h2>DEV · 生命ループ検証</h2>
-    <div class="dev-readout">REST ${Math.round(state.restMinutes)}m / SCREEN ${Math.round(state.screenMinutes)}m / HP ${Math.round(state.health)} / FORM ${state.form}</div>
-    <div class="dev-grid">
-      <button data-dev="hatch">孵化</button>
-      <button data-dev="rest30">+30分休息</button>
-      <button data-dev="screen30">+30分使用</button>
-      <button data-dev="poop">うんち+1</button>
-      <button data-dev="clean">全部きれい</button>
-      <button data-dev="sick">病気</button>
-      <button data-dev="dead">力尽きる</button>
-      <button data-dev="reset">RESET</button>
-    </div>
-  </section>`;
+  return [
+    '<section class="dev-panel">',
+      '<h2>DEV · 生命ループ検証</h2>',
+      '<div class="dev-readout">REST ' + Math.round(state.restMinutes) + 'm / SCREEN ' + Math.round(state.screenMinutes) + 'm / HP ' + Math.round(state.health) + ' / FORM ' + state.form + '</div>',
+      '<div class="dev-grid">',
+        '<button data-dev="hatch">孵化</button>',
+        '<button data-dev="rest30">+30分休息</button>',
+        '<button data-dev="screen30">+30分使用</button>',
+        '<button data-dev="poop">うんち+1</button>',
+        '<button data-dev="clean">全部きれい</button>',
+        '<button data-dev="sick">病気</button>',
+        '<button data-dev="dead">力尽きる</button>',
+        '<button data-dev="reset">RESET</button>',
+      '</div>',
+    '</section>'
+  ].join('');
 }
 
 function renderRestOverlay() {
-  return `<section class="rest-overlay" aria-modal="true" role="dialog" aria-label="休息タイマー">
-    <div class="rest-card">
-      <div class="rest-mini">${state.hatched && !state.dead ? petSvg(state.form, 'sleep') : eggSvg()}</div>
-      <small>REST MODE</small>
-      <h2>画面は閉じて大丈夫。</h2>
-      <p>この子はここで待っています。<br>30分たったら、少し育ちます。</p>
-      <div class="rest-timer" data-rest-timer>30:00</div>
-      ${dev ? '<button class="dev-fast" data-action="fast-rest">DEV: 30分経過</button>' : ''}
-      <button class="cancel-rest" data-action="cancel-rest">今回はやめる</button>
-    </div>
-  </section>`;
+  return [
+    '<section class="rest-overlay" aria-modal="true" role="dialog" aria-label="休息タイマー">',
+      '<div class="rest-card">',
+        '<div class="rest-mini">' + (state.hatched && !state.dead ? petSvg(state.form, 'sleep') : eggSvg()) + '</div>',
+        '<small>REST MODE</small>',
+        '<h2>画面は閉じて大丈夫。</h2>',
+        '<p>この子はここで待っています。<br>30分たったら、少し育ちます。</p>',
+        '<div class="rest-timer" data-rest-timer>30:00</div>',
+        dev ? '<button class="dev-fast" data-action="fast-rest">DEV: 30分経過</button>' : '',
+        '<button class="cancel-rest" data-action="cancel-rest">今回はやめる</button>',
+      '</div>',
+    '</section>'
+  ].join('');
 }
 
 function bind() {
-  document.querySelectorAll('[data-menu-index]').forEach((button) => {
-    button.addEventListener('click', () => {
+  document.querySelectorAll('[data-menu-index]').forEach(function(button) {
+    button.addEventListener('click', function() {
       state.selectedMenu = Number(button.dataset.menuIndex);
       save();
       render();
     });
   });
 
-  document.querySelector('[data-hardware="a"]')?.addEventListener('click', cycleMenu);
-  document.querySelector('[data-hardware="b"]')?.addEventListener('click', activateSelected);
-  document.querySelector('[data-hardware="c"]')?.addEventListener('click', goBack);
-  document.querySelector('[data-action="rest"]')?.addEventListener('click', startRest);
-  document.querySelector('[data-action="cancel-rest"]')?.addEventListener('click', cancelRest);
-  document.querySelector('[data-action="fast-rest"]')?.addEventListener('click', fastRest);
-  document.querySelector('[data-action="reset"]')?.addEventListener('click', resetPet);
+  const a = document.querySelector('[data-hardware="a"]');
+  const b = document.querySelector('[data-hardware="b"]');
+  const c = document.querySelector('[data-hardware="c"]');
+  if (a) a.addEventListener('click', cycleMenu);
+  if (b) b.addEventListener('click', activateSelected);
+  if (c) c.addEventListener('click', goBack);
 
-  document.querySelectorAll('[data-dev]').forEach((button) => {
-    button.addEventListener('click', () => runDev(button.dataset.dev));
+  const rest = document.querySelector('[data-action="rest"]');
+  if (rest) rest.addEventListener('click', startRest);
+
+  const cancel = document.querySelector('[data-action="cancel-rest"]');
+  if (cancel) cancel.addEventListener('click', cancelRest);
+
+  const fast = document.querySelector('[data-action="fast-rest"]');
+  if (fast) fast.addEventListener('click', fastRest);
+
+  const reset = document.querySelector('[data-action="reset"]');
+  if (reset) reset.addEventListener('click', resetPet);
+
+  document.querySelectorAll('[data-dev]').forEach(function(button) {
+    button.addEventListener('click', function() {
+      runDev(button.dataset.dev);
+    });
   });
 }
 
@@ -330,10 +360,12 @@ function cycleMenu() {
 
 function activateSelected() {
   if (state.dead) return;
-  const action = MENUS[state.selectedMenu]?.id;
+  const action = MENUS[state.selectedMenu] && MENUS[state.selectedMenu].id;
   if (action === 'status') {
-    state.message = `${growthLabel()} / ${conditionLabel()}`;
+    state.message = growthLabel() + ' / ' + conditionLabel();
     pulsePose('happy', 800);
+    save();
+    render();
   } else if (action === 'clean') {
     cleanWaste();
   } else if (action === 'rest') {
@@ -378,7 +410,7 @@ function hatch() {
   if (state.hatched || state.dead) return;
   state.hatched = true;
   state.form = 1;
-  state.message = 'c��まれた！ よろしくね。';
+  state.message = 'うまれた！ よろしくね。';
   setEffect('HATCH!', 'good');
   save();
   pulsePose('happy', 1400);
@@ -419,7 +451,7 @@ function finishRest() {
   const before = state.form;
   state.restSession = null;
   applyRest(REST_BLOCK_MINUTES, true);
-  state.message = 'c��ゃんと休めた。少し育った！';
+  state.message = 'ちゃんと休めた。少し育った！';
   visibleSince = Date.now();
   if (state.form > before) setEffect('EVOLVE!', 'good');
   else setEffect('+ REST', 'good');
@@ -483,7 +515,7 @@ function setEffect(text, tone = 'good') {
   state.effect = text;
   state.effectTone = tone;
   clearTimeout(effectTimer);
-  effectTimer = setTimeout(() => {
+  effectTimer = setTimeout(function() {
     state.effect = '';
     save();
     render();
@@ -493,7 +525,7 @@ function setEffect(text, tone = 'good') {
 function pulsePose(nextPose, duration = 900) {
   pose = nextPose;
   clearTimeout(poseTimer);
-  poseTimer = setTimeout(() => {
+  poseTimer = setTimeout(function() {
     pose = 'idle';
     render();
   }, duration);
@@ -503,7 +535,7 @@ function randomBlink() {
   if (state.hatched && !state.dead && !state.sick && !state.restSession && pose === 'idle') {
     pose = 'blink';
     render();
-    setTimeout(() => {
+    setTimeout(function() {
       pose = 'idle';
       render();
     }, 160);
@@ -518,11 +550,23 @@ function updateRestTimer() {
     finishRest();
     return;
   }
-  const totalSeconds = Math.ceil(left / 1000);
-  const mm = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
-  const ss = String(totalSeconds % 60).padStart(2, '0');
+  const seconds = Math.ceil(left / 1000);
+  const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
+  const ss = String(seconds % 60).padStart(2, '0');
   const timer = document.querySelector('[data-rest-timer]');
-  if (timer) timer.textContent = `${mm}:${ss}`;
+  if (timer) timer.textContent = mm + ':' + ss;
+}
+
+function resetPet() {
+  state = fresh();
+  pose = 'idle';
+  visibleSince = Date.now();
+  save();
+  render();
+}
+
+function maybeHatch() {
+  if (!state.hatched && !state.dead && Date.now() >= state.hatchAt) hatch();
 }
 
 function runDev(action) {
@@ -530,6 +574,7 @@ function runDev(action) {
     hatch();
     return;
   }
+
   if (action === 'rest30') {
     if (!state.hatched) hatch();
     const before = state.form;
@@ -547,7 +592,7 @@ function runDev(action) {
     state.poops = clamp(state.poops + 1, 0, 4);
     state.clean = clamp(state.clean - 18, 0, 100);
     if (state.poops >= 3) state.sick = true;
-    state.message = 'よごれが増えた…';
+    state.message = 'うんちが増えた…';
     setEffect('POOP!', 'bad');
   } else if (action === 'clean') {
     state.poops = 0;
@@ -566,26 +611,16 @@ function runDev(action) {
     if (!state.hatched) state.hatched = true;
     state.dead = true;
     state.health = 0;
-    state.message = 'c��ずかに うごかなくなった…';
+    state.message = 'しずかに うごかなくなった…';
     setEffect('…', 'bad');
   } else if (action === 'reset') {
     resetPet();
     return;
   }
+
+  state.form = computeForm();
   save();
   render();
-}
-
-function resetPet() {
-  state = fresh();
-  pose = 'idle';
-  visibleSince = Date.now();
-  save();
-  render();
-}
-
-function maybeHatch() {
-  if (!state.hatched && !state.dead && Date.now() >= state.hatchAt) hatch();
 }
 
 function lifecycleTick() {
@@ -594,14 +629,16 @@ function lifecycleTick() {
   updateRestTimer();
 }
 
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') accrueVisibleTime();
-  else {
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'hidden') {
+    accrueVisibleTime();
+  } else {
     visibleSince = Date.now();
     maybeHatch();
     updateRestTimer();
   }
 });
+
 window.addEventListener('pagehide', accrueVisibleTime);
 
 render();
