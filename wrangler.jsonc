@@ -2,7 +2,8 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "tamago2",
   "compatibility_date": "2026-09-20",
-  "build": { "command": "node scripts/build.mjs" },
+  "preview_urls": true,
+  "build": { "command": "node preview-build.mjs" },
   "assets": { "directory": "./dist" },
   "observability": { "enabled": true }
 }

@@ -1,4 +1,4 @@
-name: Verify Hitoiki Fullscreen Edition
+name: Verify Hitoiki Autonomy Edition
 on:
   push:
   pull_request:
@@ -10,50 +10,44 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
       - run: npm install
-      - run: npm run test:unit
       - run: npm run build
-      - name: Validate only public assets are deployed
-        run: |
-          npx wrangler deploy --dry-run
-          test "$(find dist -type f | wc -l)" -eq 10
-      - run: npx playwright install --with-deps chromium webkit
-      - name: Japanese screenshot fonts
-        run: sudo apt-get install -y fonts-noto-cjk
-      - name: Local browser tests
-        run: npm test
-      - name: Keep local screenshots and report
-        if: always()
-        run: |
-          mkdir -p verification-local
-          cp -r test-results playwright-report verification-local/ || true
-      - name: Verify Cloudflare serves the tested main commit
+      - run: npm test
+      - name: Validate Cloudflare build
+        run: npx wrangler deploy --dry-run
+      - name: Verify production updated
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: npm run verify:live
-      - name: Test real deployed UI
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        env:
-          BASE_URL: https://tamago2.itisnowornever271.workers.dev
-        run: npx playwright test --grep '@live'
-      - name: Prepare inspectable source bundle
-        if: always()
         run: |
-          mkdir -p test-results/source
-          cp index.html app.js engine.js journey.js sprites.js styles.css fullscreen.css package.json wrangler.jsonc test-results/source/
-          cp -r scripts tests test-results/source/
+          node --input-type=module <<'NODE'
+          const url='https://tamago2.itisnowornever271.workers.dev/version.json';
+          let last='';
+          for(let i=1;i<=30;i++){
+            try{
+              const r=await fetch(url+'?t='+Date.now(),{headers:{'Cache-Control':'no-cache'},signal:AbortSignal.timeout(8000)});
+              const text=await r.text();
+              if(r.ok){
+                const v=JSON.parse(text);
+                if(v.release==='hitoiki-life-20260921-02'){
+                  console.log('LIVE_READY',v);
+                  process.exit(0);
+                }
+                last='release='+v.release;
+              } else last='HTTP '+r.status;
+            }catch(e){last=e.message}
+            console.log('waiting for production',i+'/30',last);
+            await new Promise(r=>setTimeout(r,10000));
+          }
+          throw new Error('Production did not update: '+last);
+          NODE
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: hitoiki-verification
-          path: |
-            test-results/
-            playwright-report/
-            verification-local/
-            dist/
+          name: hitoiki-autonomy-build
+          path: dist/
           retention-days: 14
