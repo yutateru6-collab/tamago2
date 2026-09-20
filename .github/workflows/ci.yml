@@ -1,4 +1,4 @@
-name: Verify Soft Pixel Prototype
+name: Verify Tamago2 Virtual Pet
 on:
   push:
   pull_request:
@@ -20,7 +20,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: soft-pixel-screenshots
+          name: tamago2-visual-screenshots
           path: test-results/visual/
       - uses: actions/upload-artifact@v4
         if: always()
