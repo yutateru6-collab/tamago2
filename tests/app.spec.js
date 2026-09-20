@@ -1,44 +1,60 @@
 import { test, expect } from '@playwright/test';
 
-test('initial soft-pixel home fits phone and is intentionally sparse',async({page},info)=>{
+test('first view explains the concept and starts from an egg', async ({ page }, info) => {
   await page.goto('/');
-  await expect(page.getByText('SOFT PIXEL TAMAGO')).toBeVisible();
-  await expect(page.locator('.sprite-stage svg')).toBeVisible();
-  await expect(page.locator('.room')).toHaveAttribute('data-stage','0');
-  await expect(page.locator('.decor:visible')).toHaveCount(0);
-  await page.screenshot({path:`test-results/visual/${info.project.name}-home-initial.png`,fullPage:true});
+  await expect(page.getByRole('heading', { name: /スマホを置くほど/ })).toBeVisible();
+  await expect(page.getByText('↑ 進化')).toBeVisible();
+  await expect(page.getByText('↓ 退化')).toBeVisible();
+  await expect(page.locator('.toy-shell')).toBeVisible();
+  await expect(page.locator('.lcd')).toHaveAttribute('data-life', 'egg');
+  await expect(page.getByRole('button', { name: /30分、スマホを置く/ })).toBeVisible();
+  await page.screenshot({ path: `test-results/visual/${info.project.name}-01-egg-home.png`, fullPage: true });
 });
 
-test('thirty minute confirmations grow the room and persist',async({page},info)=>{
+test('rest evolves the pet and the character visibly exists in the lcd world', async ({ page }, info) => {
   await page.goto('/?dev=1');
-  for(let i=1;i<=3;i++){
-    await page.getByRole('button',{name:'30分、スマホを置く'}).click();
-    await page.getByRole('button',{name:'30分経過させる'}).click();
-    await page.getByRole('button',{name:'30分、休めた'}).click();
-    await expect(page.locator('.room')).toHaveAttribute('data-stage',String(i));
-  }
-  await expect(page.locator('.lamp')).toBeVisible();
-  await expect(page.locator('.shelf')).toBeVisible();
-  await expect(page.locator('.plant')).toBeVisible();
-  await page.reload();
-  await expect(page.locator('.room')).toHaveAttribute('data-stage','3');
-  await page.screenshot({path:`test-results/visual/${info.project.name}-home-grown.png`,fullPage:true});
+  await page.getByRole('button', { name: '孵化' }).click();
+  await expect(page.locator('.lcd')).toHaveAttribute('data-life', 'pet');
+  await expect(page.getByText('FORM 1')).toBeVisible();
+  await page.getByRole('button', { name: '+30分休息' }).click();
+  await expect(page.getByText('FORM 2')).toBeVisible();
+  await page.screenshot({ path: `test-results/visual/${info.project.name}-02-evolved.png`, fullPage: true });
 });
 
-test('five sprite states reuse one lightweight character system',async({page},info)=>{
+test('simulated heavy screen use causes waste sickness and degeneration', async ({ page }, info) => {
   await page.goto('/?dev=1');
-  for(const state of ['idle','blink','happy','tired','craft']){
-    await page.getByRole('button',{name:state,exact:true}).click();
-    await expect(page.locator('.room')).toHaveAttribute('data-state',state);
-    await page.screenshot({path:`test-results/visual/${info.project.name}-state-${state}.png`});
-  }
+  await page.getByRole('button', { name: '孵化' }).click();
+  await page.getByRole('button', { name: '+30分休息' }).click();
+  await expect(page.getByText('FORM 2')).toBeVisible();
+  for (let i = 0; i < 6; i += 1) await page.getByRole('button', { name: '+30分使用' }).click();
+  await expect(page.getByText('FORM 1')).toBeVisible();
+  await expect(page.locator('.poop-svg')).toHaveCount(4);
+  await expect(page.locator('.lcd')).toHaveAttribute('data-condition', 'びょうき');
+  await page.screenshot({ path: `test-results/visual/${info.project.name}-03-sick-dirty.png`, fullPage: true });
 });
 
-test('manual overuse makes the character tired without pretending to detect phone usage',async({page})=>{
+test('clean action removes waste without requiring a long interaction', async ({ page }) => {
+  await page.goto('/?dev=1');
+  await page.getByRole('button', { name: '孵化' }).click();
+  await page.getByRole('button', { name: 'うんち+1' }).click();
+  await expect(page.locator('.poop-svg')).toHaveCount(1);
+  await page.getByRole('button', { name: '全部きれい' }).click();
+  await expect(page.locator('.poop-svg')).toHaveCount(0);
+  await expect(page.getByText('きれい', { exact: true })).toBeVisible();
+});
+
+test('death state has a restart path', async ({ page }, info) => {
+  await page.goto('/?dev=1');
+  await page.getByRole('button', { name: '力尽きる' }).click();
+  await expect(page.locator('.lcd')).toHaveAttribute('data-life', 'dead');
+  await expect(page.getByRole('button', { name: '新しいたまごから始める' })).toBeVisible();
+  await page.screenshot({ path: `test-results/visual/${info.project.name}-04-dead.png`, fullPage: true });
+  await page.getByRole('button', { name: '新しいたまごから始める' }).click();
+  await expect(page.locator('.lcd')).toHaveAttribute('data-life', 'egg');
+});
+
+test('web limitation is stated explicitly rather than pretending to read iPhone screen time', async ({ page }) => {
   await page.goto('/');
-  page.on('dialog',dialog=>dialog.accept());
-  await page.getByRole('button',{name:'今日は見すぎた（自己申告）'}).click();
-  await expect(page.locator('.room')).toHaveAttribute('data-state','tired');
-  await expect(page.locator('[data-stat="vitality"]')).toHaveText('52/100');
-  await expect(page.getByText(/Web版は他アプリの使用を検知しません/)).toBeVisible();
+  await page.getByText('この試作で計測できる範囲').click();
+  await expect(page.getByText(/Web版はiPhone全体のスクリーンタイムを読み取れません/)).toBeVisible();
 });
