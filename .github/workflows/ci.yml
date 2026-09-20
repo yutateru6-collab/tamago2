@@ -1,4 +1,4 @@
-name: Verify Tamago2 Care Edition
+name: Verify Hitoiki Fullscreen Edition
 on:
   push:
   pull_request:
@@ -22,15 +22,17 @@ jobs:
       - name: Validate only public assets are deployed
         run: |
           npx wrangler deploy --dry-run
-          test "$(find dist -type f | wc -l)" -eq 8
+          test "$(find dist -type f | wc -l)" -eq 10
       - run: npx playwright install --with-deps chromium webkit
       - name: Japanese screenshot fonts
         run: sudo apt-get install -y fonts-noto-cjk
-      - run: npm test
-      - name: Inspect current public endpoint
+      - name: Local browser tests
+        run: npm test
+      - name: Keep local screenshots and report
         if: always()
         run: |
-          node --input-type=module -e "try {const r=await fetch('https://tamago2.itisnowornever271.workers.dev/',{signal:AbortSignal.timeout(12000)});const t=await r.text();console.log(JSON.stringify({url:r.url,status:r.status,title:t.match(/<title>(.*?)<\/title>/)?.[1],newEdition:t.includes('care-20260920-01')}));}catch(e){console.log('Public endpoint probe:',e.message)}"
+          mkdir -p verification-local
+          cp -r test-results playwright-report verification-local/ || true
       - name: Verify Cloudflare serves the tested main commit
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: npm run verify:live
@@ -43,14 +45,15 @@ jobs:
         if: always()
         run: |
           mkdir -p test-results/source
-          cp index.html app.js engine.js sprites.js styles.css package.json wrangler.jsonc test-results/source/
+          cp index.html app.js engine.js journey.js sprites.js styles.css fullscreen.css package.json wrangler.jsonc test-results/source/
           cp -r scripts tests test-results/source/
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: tamago2-care-verification
+          name: hitoiki-verification
           path: |
             test-results/
             playwright-report/
+            verification-local/
             dist/
           retention-days: 14

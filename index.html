@@ -6,25 +6,26 @@
 <meta name="theme-color" content="#f6efdf">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="description" content="ごはん、トイレ、おくすり。ちょっとお世話して、スマホを置く。小さな命を育てるtamago2。">
-<title>tamago2｜お世話して、ひと休み。</title>
+<meta name="apple-mobile-web-app-title" content="ひといき">
+<meta name="description" content="スマホを置くと、この子の時間が動き出す。短いお世話と、画面の外で過ごす時間でつながる、小さな相棒。">
+<title>ひといき｜あなたにも、この子にも、自分の時間。</title>
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="stylesheet" href="./styles.css?v=care-20260920-01">
+<link rel="stylesheet" href="./styles.css?v=hitoiki-20260921-01">
+<link rel="stylesheet" href="./fullscreen.css?v=hitoiki-20260921-01">
 </head>
 <body>
-<main id="app" class="app" data-release="care-20260920-01">
-  <header class="heading"><div><p class="eyebrow">TAMAGO2 <span>・ おせわ版</span></p><h1>お世話して、ひと休み。</h1></div><button class="help-button" data-action="help" aria-label="遊び方と計測の説明">?</button></header>
+<main id="app" class="app" data-release="hitoiki-20260921-01">
+<div class="viewport">
+  <header class="heading"><div><p class="eyebrow">ひといき <span>HITOIKI</span></p><h1>あなたにも、この子にも、自分の時間。</h1></div><div class="header-actions"><button id="journal-button" class="journal-button" data-action="journal" aria-label="暮らしの記録"><span aria-hidden="true">▤</span><span id="journal-count"></span></button><button class="help-button" data-action="help" aria-label="遊び方と計測の説明">?</button></div></header>
   <div id="demo-label" class="demo-label" hidden>検証モード · 通常の育成データとは別です</div>
-  <section class="device" aria-label="たまご型の育成端末">
-    <div class="shell-ring" aria-hidden="true"></div>
-    <div class="device-logo">tamago<span>2</span><small>POCKET FRIEND</small></div>
-    <span class="shell-star star-one" aria-hidden="true">✦</span><span class="shell-star star-two" aria-hidden="true">✧</span>
+  <section class="device" aria-label="まめの暮らし">
     <div class="bezel"><div id="lcd" class="lcd" data-life="egg" data-form="0">
       <nav id="menus-top" class="menu-row" aria-label="お世話メニュー"></nav>
       <div class="lcd-meta"><span id="pet-age">1代目 · 0日</span><span id="pet-stage">たまご</span></div>
       <div id="scene" class="scene">
         <div class="pixel-cloud" aria-hidden="true"></div>
+        <div id="living-items" class="living-items" data-unlocked="0" hidden aria-label="休息で少しずつ豊かになる暮らし"><div class="room-window" aria-hidden="true"></div><div class="room-leaf" aria-hidden="true"></div><div class="room-cup" aria-hidden="true"></div><div class="room-plant" aria-hidden="true"></div><div class="room-book" aria-hidden="true"></div></div>
         <div id="waste" class="waste" aria-label="うんち"></div>
         <div id="pet-position" class="pet-position"><div id="pet-body" class="pet-body"></div></div>
         <div id="action-prop" class="action-prop" aria-hidden="true"></div>
@@ -35,24 +36,23 @@
         <div class="floor" aria-hidden="true"></div>
         <div id="screen-panel" class="screen-panel" hidden></div>
       </div>
-      <p id="lcd-message" class="lcd-message" role="status" aria-live="polite">たまごが うごいている…</p>
-      <nav id="menus-bottom" class="menu-row bottom" aria-label="あそびと状態のメニュー"></nav>
+      <p id="lcd-message" class="lcd-message" role="status" aria-live="polite">もうすぐ会えるね。次は、あなたの時間だよ。</p>
+      <nav id="menus-bottom" class="menu-row bottom" aria-label="あそびと休息のメニュー"></nav>
     </div></div>
-    <div class="selection-line"><span id="attention-light" class="attention-light"></span><span id="selection-label">ごはん</span></div>
-    <div class="hardware"><div><button data-hardware="a" aria-label="A 選ぶ">A</button><span>えらぶ</span></div><div><button data-hardware="b" aria-label="B 決定">B</button><span>きめる</span></div><div><button data-hardware="c" aria-label="C 戻る">C</button><span>もどる</span></div></div>
-    <div class="speaker" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <div class="control-deck"><div class="selection-line"><span id="attention-light" class="attention-light"></span><span id="selection-label">ひと休み</span></div>
+    <div class="hardware"><div><button data-hardware="a" aria-label="A 選ぶ">A</button><span>えらぶ</span></div><div><button data-hardware="b" aria-label="B 決定">B</button><span>きめる</span></div><div><button data-hardware="c" aria-label="C 戻る">C</button><span>もどる</span></div></div></div>
   </section>
-  <p class="touch-hint">ごはん・トイレのアイコンも直接押せます。</p>
-  <button id="rest-button" class="rest-button" data-action="rest"><span class="rest-button-icon">Z</span><span><strong>30分、スマホを置く</strong><small>この子の成長に、ひと休みを。</small></span><span class="rest-arrow">↗</span></button>
-  <p class="concept"><span>置く時間で <b>進化 ↑</b></span><span>見すぎると <b>退化 ↓</b></span></p>
-  <p class="measurement-note">Web試作：この画面の表示時間＋休息の自己申告<br>iPhone全体の使用時間は取得していません。</p>
+  <div class="rest-dock"><button id="rest-button" class="rest-button" data-action="rest"><span class="rest-button-icon" aria-hidden="true">Z</span><span><strong>30分、スマホを置く</strong><small id="rest-caption">ひと休み · やくそくで時間を変更できます</small></span><span class="rest-arrow" aria-hidden="true">↗</span></button>
+  <p class="concept">スマホを置くと、この子の時間が動き出す。</p>
+  <p class="measurement-note">Web版：この画面の表示時間と、休息の自己申告。</p></div>
   <p id="save-warning" class="save-warning" role="alert" hidden>このブラウザでは保存できません。閉じると育成状況が失われます。</p>
   <button id="rebirth" class="rebirth" data-action="rebirth" hidden>新しいたまごを迎える</button>
-  <details id="dev-panel" class="dev-panel" hidden open><summary>開発者用 · 状態をすぐ試す</summary><p>本番データには影響しません。数字と状態は検証用です。</p><output id="dev-readout"></output><div class="dev-buttons"><button data-dev="hatch">孵化</button><button data-dev="rest">＋30分休息</button><button data-dev="screen">＋60分使用</button><button data-dev="hungry">空腹にする</button><button data-dev="poop">うんち＋1</button><button data-dev="sick">病気にする</button><button data-dev="death">お別れを確認</button><button data-dev="reset">検証をリセット</button></div></details>
-  <footer class="footer">tamago2 · <span id="release">care-20260920-01</span></footer>
+</div>
+  <details id="dev-panel" class="dev-panel" hidden open><summary>開発者用 · 状態をすぐ試す</summary><p>通常データには影響しません。休息で、物語と暮らしの変化も確認できます。</p><output id="dev-readout"></output><div class="dev-buttons"><button data-dev="hatch">孵化</button><button data-dev="rest">＋30分休息</button><button data-dev="screen">＋60分使用</button><button data-dev="hungry">空腹にする</button><button data-dev="poop">うんち＋1</button><button data-dev="sick">病気にする</button><button data-dev="death">お別れを確認</button><button data-dev="reset">検証をリセット</button></div></details>
 </main>
-<dialog id="help-dialog"><div class="dialog-content"><div class="dialog-heading"><h2>この子との暮らしかた</h2><button data-action="close-help" aria-label="説明を閉じる">×</button></div><p>ごはんを食べて、うんちをして、眠る。ちょっとお世話したら、スマホを置いてひと休み。</p><dl><dt>ごはん</dt><dd>ごはんはおなか、おやつはごきげんを回復。おやつの食べすぎには注意。</dd><dt>トイレ・くすり</dt><dd>うんちはトイレで流します。病気のときは、掃除してからおくすりを。</dd><dt>でんき</dt><dd>消すと眠り、つけると起きます。眠っている間はほかのお世話ができません。</dd><dt>A・B・C</dt><dd>Aで選ぶ、Bで決める、Cで戻る。画面のアイコンや選択肢もタップできます。</dd><dt>成長とお別れ</dt><dd>休息で進化し、見すぎると退化。空腹や汚れ、病気を放置しながらこの画面を使い続けると、力尽きることがあります。閉じている間の未訪問だけでは死にません。</dd></dl><h3>Web版で分かること・分からないこと</h3><p>このページを表示した時間だけを計測します。他アプリを使ったか、端末を置いたかは判別できません。休息タイマーは経過時間だけを確認し、終了後に「置けた」と自己申告した場合に成長へ反映します。</p><p>最初の10分の表示時間はお世話用の猶予です。タイマー画面を見続けた時間も表示時間に含みます。休息と使用時間の係数は試作の調整値で、効果が検証されたものではありません。</p><p>育成データはこのブラウザ内に保存します。検証モードとは別保存です。</p><button class="dialog-done" data-action="close-help">わかった</button></div></dialog>
-<noscript>tamago2を遊ぶにはJavaScriptを有効にしてください。</noscript>
-<script type="module" src="./app.js?v=care-20260920-01"></script>
+<dialog id="journal-dialog" aria-labelledby="journal-heading"><div class="dialog-content"><div class="dialog-heading"><h2 id="journal-heading">この子の、暮らしの記録</h2><button data-action="close-journal" aria-label="記録を閉じる">×</button></div><p>休めた時間に合わせて届く、この子の小さな物語。実際の行動を検知した記録ではありません。最新30件を保存します。</p><ol id="journal-list"></ol><button class="dialog-done" data-action="close-journal">閉じて、あなたの時間へ</button></div></dialog>
+<dialog id="help-dialog" aria-labelledby="help-heading"><div class="dialog-content"><div class="dialog-heading"><h2 id="help-heading">この子との暮らしかた</h2><button data-action="close-help" aria-label="説明を閉じる">×</button></div><p>短く触れ合ったら、次はあなたの時間。スマホを置いている間、この子にも自分の暮らしがある。そんな関係をつくるためのアプリです。</p><dl><dt>ごはん・トイレ・くすり・でんき</dt><dd>これまでどおりお世話できます。ごはんや遊びを繰り返すだけでは成長は進みません。病気のときは、掃除してからくすりを。消灯すると眠ります。</dd><dt>やくそく</dt><dd>15・30・60分から休息の長さを選び、「本を読む」「食事を楽しむ」など、自分の時間を決めます。選ぶと保存。進行中のタイマーには影響しません。</dd><dt>ひと休み → 暮らしの記録</dt><dd>タイマーを始めたら、画面を閉じて大丈夫。戻って「置けた」と自己申告すると、成長と小さな物語に反映。タイマーが終わるだけでは加算されません。中止や失敗に罰はありません。</dd><dt>ひとりでできること</dt><dd>確認済みの休息が3回になると軽い食事の支度、4回からは片付けも。放っておくことを罰するのではなく、離れた時間を暮らしに変えます。物語と小物は、このアプリの中の創作です。</dd><dt>訪問しなくても大丈夫</dt><dd>アプリを閉じた未訪問時間だけでは、空腹・ごきげん・健康・汚れは悪化しません。通知で呼び戻す機能、連続記録を失う罰、広告視聴による回復はありません。</dd><dt>A・B・C</dt><dd>Aで選ぶ、Bで決める、Cで戻る。アイコンと選択肢も直接タップできます。Cでタイマー画面を閉じても休息は続きます。「今回はやめる」で中止できます。</dd></dl><h3>Web版で計測できる範囲</h3><p>このページの表示時間だけを計測します。iPhone全体の使用時間や、他アプリで何をしていたかは読み取りません。読書したか、端末を置いたかも判別できないので、休息終了後に自分で教えてください。</p><p>表示時間が長いと成長や体調に影響します。最初の10分はお世話用の猶予です。タイマーを見続けた時間も表示時間に含みます。空腹や病気のまま長くこの画面を使い続けると、お別れになることがあります。係数は試作の調整値で、デトックス効果を保証するものではありません。</p><h3>全画面表示について</h3><p>卵型の枠をなくし、使える画面いっぱいに表示します。Safariの通常タブではブラウザのバーが残ります。ホーム画面に追加して開くための独立表示設定も用意しています。端末やブラウザによって表示は異なります。</p><p>データはこのブラウザ内に保存します。検証モードは別保存です。画面を閉じている間にプログラムを動かすのではなく、戻ったときに記録を更新します。</p><p class="version-note">仮称：ひといき / 開発リポジトリ：tamago2<br><span id="release">hitoiki-20260921-01</span></p><button class="dialog-done" data-action="close-help">わかった</button></div></dialog>
+<noscript>ひといきを使うにはJavaScriptを有効にしてください。</noscript>
+<script type="module" src="./app.js?v=hitoiki-20260921-01"></script>
 </body>
 </html>

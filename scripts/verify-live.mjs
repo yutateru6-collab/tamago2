@@ -11,7 +11,7 @@ for(let attempt=1;attempt<=24;attempt++){
     if(!v.ok)throw new Error(`version HTTP ${v.status}`);
     const version=await v.json();if(version.app!=='tamago2'||version.release!==RELEASE)throw new Error(`stale release: ${JSON.stringify(version)}`);
     const results=[];
-    for(const name of ['index.html','app.js','engine.js','sprites.js','styles.css']){
+    for(const name of ['index.html','app.js','engine.js','sprites.js','styles.css','fullscreen.css','journey.js','manifest.webmanifest','icon.svg']){
       const response=await fetch(`${origin}/${name}?check=${Date.now()}`,{signal:AbortSignal.timeout(10000),headers:{'Cache-Control':'no-cache'}});
       if(!response.ok)throw new Error(`${name} HTTP ${response.status}`);
       const actual=Buffer.from(await response.arrayBuffer());const expected=await readFile(`dist/${name}`);

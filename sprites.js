@@ -2,6 +2,7 @@
 const r = (x,y,w,h,c='ink') => `<rect class="${c}" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
 const svg = (body,box='0 0 16 16',label='') => `<svg viewBox="${box}" shape-rendering="crispEdges" ${label ? `role="img" aria-label="${label}"` : 'aria-hidden="true"'}>${body}</svg>`;
 const icons = {
+ promise:r(3,3,10,11)+r(5,5,6,7,'cut')+r(5,8,2,2)+r(7,6,2,2)+r(9,5,2,2),
  meal: r(3,7,10,2)+r(4,9,8,3)+r(6,12,4,1)+r(5,4,2,2)+r(8,2,2,3)+r(11,4,1,2),
  snack: r(3,6,10,7)+r(4,4,8,2)+r(7,2,2,2)+r(5,8,2,2,'cut')+r(9,10,2,2,'cut'),
  toilet: r(9,2,4,6)+r(3,7,10,2)+r(4,9,8,3)+r(8,12,3,2)+r(10,3,2,2,'cut'),
