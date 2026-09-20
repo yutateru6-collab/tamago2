@@ -3,21 +3,21 @@ import { test, expect } from '@playwright/test';
 test('first view explains the concept and starts from an egg', async ({ page }, info) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: /スマホを置くほど/ })).toBeVisible();
-  await expect(page.getByText('↑ 進化')).toBeVisible();
-  await expect(page.getByText('↓ 退化')).toBeVisible();
+  await expect(page.getByText('↑ 進化', { exact: true })).toBeVisible();
+  await expect(page.getByText('↓ 退化', { exact: true })).toBeVisible();
   await expect(page.locator('.toy-shell')).toBeVisible();
   await expect(page.locator('.lcd')).toHaveAttribute('data-life', 'egg');
   await expect(page.getByRole('button', { name: /30分、スマホを置く/ })).toBeVisible();
   await page.screenshot({ path: `test-results/visual/${info.project.name}-01-egg-home.png`, fullPage: true });
 });
 
-test('rest evolves the pet and the character visibly exists in the lcd world', async ({ page }, info) => {
+test('thirty minutes of rest evolves the pet', async ({ page }, info) => {
   await page.goto('/?dev=1');
   await page.getByRole('button', { name: '孵化' }).click();
   await expect(page.locator('.lcd')).toHaveAttribute('data-life', 'pet');
-  await expect(page.getByText('FORM 1')).toBeVisible();
+  await expect(page.getByText('FORM 1', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: '+30分休息' }).click();
-  await expect(page.getByText('FORM 2')).toBeVisible();
+  await expect(page.getByText('FORM 2', { exact: true })).toBeVisible();
   await page.screenshot({ path: `test-results/visual/${info.project.name}-02-evolved.png`, fullPage: true });
 });
 
@@ -25,9 +25,13 @@ test('simulated heavy screen use causes waste sickness and degeneration', async 
   await page.goto('/?dev=1');
   await page.getByRole('button', { name: '孵化' }).click();
   await page.getByRole('button', { name: '+30分休息' }).click();
-  await expect(page.getByText('FORM 2')).toBeVisible();
-  for (let i = 0; i < 6; i += 1) await page.getByRole('button', { name: '+30分使用' }).click();
-  await expect(page.getByText('FORM 1')).toBeVisible();
+  await expect(page.getByText('FORM 2', { exact: true })).toBeVisible();
+
+  for (let i = 0; i < 6; i += 1) {
+    await page.getByRole('button', { name: '+30分使用' }).click();
+  }
+
+  await expect(page.getByText('FORM 1', { exact: true })).toBeVisible();
   await expect(page.locator('.poop-svg')).toHaveCount(4);
   await expect(page.locator('.lcd')).toHaveAttribute('data-condition', 'びょうき');
   await page.screenshot({ path: `test-results/visual/${info.project.name}-03-sick-dirty.png`, fullPage: true });
