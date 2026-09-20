@@ -1,1 +1,15 @@
-{"id":"./","name":"tamago2 — お世話して、ひと休み。","short_name":"tamago2","start_url":"./","scope":"./","display":"standalone","background_color":"#f6efdf","theme_color":"#f6efdf","lang":"ja","icons":[{"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]}
+{
+  "id": "./",
+  "name": "ひといき — あなたにも、この子にも、自分の時間。",
+  "short_name": "ひといき",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6efdf",
+  "theme_color": "#f6efdf",
+  "lang": "ja",
+  "icons": [
+    {"src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}
+  ],
+  "description": "短い触れ合いと、画面の外の時間でつながる小さな相棒。"
+}
