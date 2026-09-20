@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {mkdir} from 'node:fs/promises';
-test('return story exit stays fully visible on compact phone screens @live',async({page},info)=>{
+test('return story exit and care menus stay fully visible on compact phones @live',async({page},info)=>{
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  for(const [width,height] of [[390,664],[320,568],[375,667]]){
   await page.setViewportSize({width,height});await page.goto('/?dev=1');
@@ -12,6 +12,12 @@ test('return story exit stays fully visible on compact phone screens @live',asyn
   const panel=await page.locator('#screen-panel').boundingBox();const box=await button.boundingBox();
   expect(box.height).toBeGreaterThanOrEqual(44);
   expect(box.y+box.height).toBeLessThanOrEqual(panel.y+panel.height-2);
+  const lcd=await page.locator('#lcd').boundingBox();
+  for(const item of await page.locator('.menu-button').all()){
+   const bounds=await item.boundingBox();
+   expect(bounds.y).toBeGreaterThanOrEqual(lcd.y);
+   expect(bounds.y+bounds.height).toBeLessThanOrEqual(lcd.y+lcd.height+1);
+  }
   await mkdir('test-results/visual',{recursive:true});
   await page.screenshot({path:`test-results/visual/${info.project.name}-story-fit-${width}x${height}.png`,fullPage:true});
   await button.click();await expect(page.locator('#screen-panel')).toBeHidden();
