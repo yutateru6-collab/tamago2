@@ -1,0 +1,15 @@
+node_modules/
+tests/
+docs/
+.github/
+test-results/
+playwright-report/
+README.md
+package.json
+package-lock.json
+bun.lock
+bun.lockb
+playwright.config.js
+wrangler.jsonc
+.assetsignore
+.gitignore
