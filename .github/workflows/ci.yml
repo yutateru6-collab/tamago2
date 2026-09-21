@@ -1,4 +1,4 @@
-name: Verify Hitoiki Developer Lab
+name: Verify Hitoiki Character Artwork
 on:
   push:
   pull_request:
@@ -21,27 +21,34 @@ jobs:
       - run: npm test
       - run: npx playwright install --with-deps chromium webkit
       - run: sudo apt-get install -y fonts-noto-cjk
-      - name: Actual controls, isolated self-test, speech and normal-data protection
+      - name: Actual sprites, expressions, meals, sleep and ten evolution looks
+        run: npm run test:character
+      - name: Existing 62-case developer lab and saved-data regression tests
         run: npm run test:lab
       - name: Validate deployment build
         run: npx wrangler deploy --dry-run
-      - name: Match production files
+      - name: Match actual production files and artwork
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: npm run verify:live
-      - name: Actual production browser verification
+      - name: Actual production character and developer tests
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         env:
           BASE_URL: https://tamago2.itisnowornever271.workers.dev
-        run: npm run test:lab
+        run: |
+          npm run test:character
+          npm run test:lab
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: hitoiki-lab-verification
+          name: hitoiki-character-verification
           path: |
             dist/
             verification/
+            assets/
             features/
             qa/
-            scripts/install-lab.mjs
+            art/mame/build.py
+            scripts/install-character.mjs
+            scripts/check-character.mjs
             scripts/check-lab.mjs
           retention-days: 14

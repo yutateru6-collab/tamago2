@@ -1,0 +1,42 @@
+name: Render original Mame sprite artwork
+on:
+  push:
+    branches: [feature/character-polish]
+    paths: [art/mame/build.py, .github/workflows/character-art.yml]
+permissions:
+  contents: write
+jobs:
+  artwork:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install Pillow==11.3.0
+      - name: Load pinned MIT pixel-art-studio helper
+        run: |
+          mkdir -p art/tools
+          BASE=https://raw.githubusercontent.com/Gamezxz/pixel-art-studio/f8c246635c4621a6c2b427833149afdc3dc3c719
+          curl --fail --location "$BASE/scripts/pixelstudio.py" -o art/tools/pixelstudio.py
+          curl --fail --location "$BASE/LICENSE" -o art/tools/LICENSE
+      - name: Generate and validate native artwork
+        run: python art/mame/build.py
+      - name: Commit only generated sprite assets to this feature branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/mame-sheet.png assets/mame-sheet.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Generate validated Mame artwork with pinned Pixel Art Studio'
+            git push origin HEAD:feature/character-polish
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mame-original-artwork
+          path: |
+            assets/
+            art/mame/generated/
+            art/tools/LICENSE
+          retention-days: 14

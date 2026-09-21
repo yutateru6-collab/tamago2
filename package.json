@@ -1,11 +1,12 @@
 {
- "name":"tamago2","private":true,"version":"0.6.0","type":"module",
+ "name":"tamago2","private":true,"version":"0.7.0","type":"module",
  "scripts":{
   "dev":"npm run build && node scripts/serve.mjs",
-  "build":"node preview-build.mjs && node scripts/repair-startup.mjs && node scripts/install-lab.mjs",
+  "build":"node preview-build.mjs && node scripts/repair-startup.mjs && node scripts/install-lab.mjs && node scripts/install-character.mjs",
   "test":"node --check dist/app.js && node --test qa/dialogue.test.mjs",
   "test:lab":"node scripts/check-lab.mjs",
-  "verify:live":"node scripts/verify-lab-live.mjs",
+  "test:character":"node scripts/check-character.mjs",
+  "verify:live":"node scripts/verify-character-live.mjs",
   "deploy":"wrangler deploy","preview":"wrangler dev"
  },
  "devDependencies":{"@playwright/test":"1.61.1","wrangler":"4.135.0"}
