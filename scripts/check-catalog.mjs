@@ -10,7 +10,7 @@ const ids=['002','003','005','007','010','012'];
 try{
  for(const type of [chromium,webkit]){
   const browser=await type.launch();let page;const checks=[];
-  const check=(name)=>checks.push(name);
+  const check=(name)=>{checks.push(name);console.log('PASS',type.name(),name);};
   try{
    const context=await browser.newContext({viewport:{width:390,height:664},isMobile:true,hasTouch:true,locale:'ja-JP'});
    page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -60,8 +60,12 @@ try{
    await page.setViewportSize({width:320,height:568});await run('catalog-preview');await allDecoded('#catalog-dialog img');await shot('small-catalog');assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2),false);check('320x568 catalog remains usable');
    // Real user mode must reveal only legitimately saved discoveries.
    const normal=await browser.newContext({viewport:{width:390,height:664},isMobile:true,hasTouch:true});const p=await normal.newPage();await p.goto(base+'/',{waitUntil:'networkidle'});await p.locator('[data-action="catalog"]').first().click();assert.equal(await p.locator('#catalog-dialog img').count(),0);check('normal new game does not unlock unseen creatures');
-   const captured=await page.evaluate(()=>hitoikiLab.snapshot());await p.evaluate(v=>localStorage.setItem('tamago2.care.v3',JSON.stringify(v)),captured);await p.reload({waitUntil:'networkidle'});await p.locator('[data-action="catalog"]').first().click();await p.waitForFunction(()=>{const images=[...document.querySelectorAll('#catalog-dialog img')];return images.length===6&&images.every(x=>x.complete&&x.naturalWidth>0);});check('normal save with discoveries displays all six');await p.screenshot({path:out+'/'+type.name()+'-normal-catalog.png',fullPage:true});await normal.close();
+   const captured=await page.evaluate(()=>hitoikiLab.snapshot());
+   // Seed before app startup, not before reload: a running page correctly saves its
+   // own state on pagehide and would overwrite a test's foreign localStorage value.
+   await p.close();await normal.addInitScript(v=>localStorage.setItem('tamago2.care.v3',JSON.stringify(v)),captured);
+   const p2=await normal.newPage();p2.on('pageerror',e=>errors.push(e.message));await p2.goto(base+'/',{waitUntil:'networkidle'});await p2.locator('[data-action="catalog"]').first().click();await p2.waitForFunction(()=>{const images=[...document.querySelectorAll('#catalog-dialog img')];return images.length===6&&images.every(x=>x.complete&&x.naturalWidth>0);});check('normal save with discoveries displays all six');await p2.screenshot({path:out+'/'+type.name()+'-normal-catalog.png',fullPage:true});await normal.close();
    assert.deepEqual(errors,[]);results.push({browser:type.name(),checks,paired,errors});console.log('CATALOG_FACE_CHECK_OK',type.name(),checks.length);await context.close();
-  }catch(e){if(page)await page.screenshot({path:out+'/'+type.name()+'-failure.png',fullPage:true}).catch(()=>{});throw e;}finally{await browser.close();}
+  }catch(e){results.push({browser:type.name(),checks,error:e.message});if(page)await page.screenshot({path:out+'/'+type.name()+'-failure.png',fullPage:true}).catch(()=>{});throw e;}finally{await browser.close();}
  }
 }finally{await writeFile(out+'/results.json',JSON.stringify({base,results},null,2));if(server)await new Promise(r=>server.close(r));}
