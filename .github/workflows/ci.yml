@@ -1,4 +1,4 @@
-name: Verify Hitoiki Renderer Hotfix
+name: Verify Hitoiki Developer Lab
 on:
   push:
   pull_request:
@@ -19,27 +19,29 @@ jobs:
       - run: npm install
       - run: npm run build
       - run: npm test
-      - name: Install browsers for actual startup checks
-        run: npx playwright install --with-deps chromium webkit
-      - name: Japanese screenshot fonts
-        run: sudo apt-get install -y fonts-noto-cjk
-      - name: Check character, menus, care, reports and saved data
-        run: npm run test:startup
-      - name: Validate Cloudflare build
+      - run: npx playwright install --with-deps chromium webkit
+      - run: sudo apt-get install -y fonts-noto-cjk
+      - name: Actual controls, isolated self-test, speech and normal-data protection
+        run: npm run test:lab
+      - name: Validate deployment build
         run: npx wrangler deploy --dry-run
-      - name: Verify fixed production files by SHA-256
+      - name: Match production files
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: npm run verify:live
-      - name: Check actual production startup and interactions
+      - name: Actual production browser verification
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         env:
           BASE_URL: https://tamago2.itisnowornever271.workers.dev
-        run: npm run test:startup
+        run: npm run test:lab
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: hitoiki-renderer-verification
+          name: hitoiki-lab-verification
           path: |
             dist/
             verification/
+            features/
+            qa/
+            scripts/install-lab.mjs
+            scripts/check-lab.mjs
           retention-days: 14
