@@ -1,0 +1,128 @@
+[
+  {
+    "id": "002",
+    "originalSha256": "ab92e7df9fee318c905e54159e3e7577328e860d47476d44ba118173ee3806c4",
+    "originalBytes": 537022,
+    "files": [
+      {
+        "name": "002-thumb.webp",
+        "width": 320,
+        "height": 439,
+        "bytes": 43172,
+        "sha256": "591fe34149386549b17f150b1e2c16442f8ee2c3086c6670bdb7b1520bb86a64"
+      },
+      {
+        "name": "002.webp",
+        "width": 800,
+        "height": 1098,
+        "bytes": 220882,
+        "sha256": "b543dc76ec73d5a2c2ec037cb55c0e8bdd54b6d6809892184ff92f500e0d98fb"
+      }
+    ]
+  },
+  {
+    "id": "003",
+    "originalSha256": "99236b9d43dc4c5ca61fd4aa11f705cd3487b342ea5a70d546ddb32fda2e172d",
+    "originalBytes": 528955,
+    "files": [
+      {
+        "name": "003-thumb.webp",
+        "width": 320,
+        "height": 442,
+        "bytes": 29220,
+        "sha256": "6ffcdbf4e977c95ce49b14e50bf44f687fd1e1338ab002699078888c14eff9ee"
+      },
+      {
+        "name": "003.webp",
+        "width": 800,
+        "height": 1104,
+        "bytes": 172954,
+        "sha256": "c571351908318e19e0dcbbd0f8755819747098953d9834f3f02ed7f34d9403d5"
+      }
+    ]
+  },
+  {
+    "id": "005",
+    "originalSha256": "ca17ce2cfa47b4d59ed934db9fd5e2117e1feedc3eba551e933282647d84ade3",
+    "originalBytes": 527227,
+    "files": [
+      {
+        "name": "005-thumb.webp",
+        "width": 320,
+        "height": 445,
+        "bytes": 30164,
+        "sha256": "73f1445a79f92e1fb42fc2f4a9af647a710fd4b5a4414987e850831545d33907"
+      },
+      {
+        "name": "005.webp",
+        "width": 800,
+        "height": 1112,
+        "bytes": 160318,
+        "sha256": "d5ba0e53d24d17bb0fca76bac8814b10900efd5f7e30808f7c829888091bdf23"
+      }
+    ]
+  },
+  {
+    "id": "007",
+    "originalSha256": "9bbe981916500c2f2d99cf3bab6fdfae01d284c3caf2496f9555b79cf80d23d7",
+    "originalBytes": 488109,
+    "files": [
+      {
+        "name": "007-thumb.webp",
+        "width": 320,
+        "height": 443,
+        "bytes": 31672,
+        "sha256": "b915f22fe3563c16130a1ff33b76209e9f1f178348b248d76dd57ab2ca3422ca"
+      },
+      {
+        "name": "007.webp",
+        "width": 800,
+        "height": 1108,
+        "bytes": 179356,
+        "sha256": "284a5196117c9006979ab442ea2bfebd1a7abfb731593717a291edc09d35bc55"
+      }
+    ]
+  },
+  {
+    "id": "010",
+    "originalSha256": "0b27283941a0570fd323614096204226b18ee91e2f1d6cefbcf312d20519d0c4",
+    "originalBytes": 460643,
+    "files": [
+      {
+        "name": "010-thumb.webp",
+        "width": 320,
+        "height": 477,
+        "bytes": 18870,
+        "sha256": "4604e8a4f274d467e6540425ee1bfea79d1280b71ea9d22b4e8d9f580caa9850"
+      },
+      {
+        "name": "010.webp",
+        "width": 800,
+        "height": 1192,
+        "bytes": 126782,
+        "sha256": "47ec1309964549192c2311f2689c992fc90bc60db7c1ed8c38d731f421f8be95"
+      }
+    ]
+  },
+  {
+    "id": "012",
+    "originalSha256": "33c4841e8b4b876a88be51ecb27022916ab935355dcf97422cf61af765263c38",
+    "originalBytes": 324391,
+    "files": [
+      {
+        "name": "012-thumb.webp",
+        "width": 320,
+        "height": 477,
+        "bytes": 11808,
+        "sha256": "0e37de235f6faa2c857f4de43bbb00d497333d6c7835b294ad37029fb1752b33"
+      },
+      {
+        "name": "012.webp",
+        "width": 800,
+        "height": 1192,
+        "bytes": 71000,
+        "sha256": "53574782bdcc5773c24be10cfa51639e8cb6ef7e1ffd43cdc83a462cc20a119d"
+      }
+    ]
+  }
+]

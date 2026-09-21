@@ -5,7 +5,7 @@ import {resolve,extname,sep} from 'node:path';
 import {chromium,webkit} from '@playwright/test';
 const root=resolve('dist'),out=process.env.BASE_URL?'verification/art-live':'verification/art-local';
 await mkdir(out,{recursive:true});let server,base=process.env.BASE_URL;const results=[];
-if(!base){server=createServer(async(req,res)=>{try{const u=new URL(req.url,'http://localhost'),f=resolve(root,'.'+(u.pathname==='/'?'/index.html':decodeURIComponent(u.pathname)));if(!f.startsWith(root+sep))return res.writeHead(403).end();const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.png':'image/png','.svg':'image/svg+xml'};res.writeHead(200,{'Content-Type':types[extname(f)]||'application/octet-stream','Cache-Control':'no-store'}).end(await readFile(f));}catch{res.writeHead(404).end();}});await new Promise(r=>server.listen(0,'127.0.0.1',r));base='http://127.0.0.1:'+server.address().port;}
+if(!base){server=createServer(async(req,res)=>{try{const u=new URL(req.url,'http://localhost'),f=resolve(root,'.'+(u.pathname==='/'?'/index.html':decodeURIComponent(u.pathname)));if(!f.startsWith(root+sep))return res.writeHead(403).end();const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.png':'image/png','.webp':'image/webp','.svg':'image/svg+xml'};res.writeHead(200,{'Content-Type':types[extname(f)]||'application/octet-stream','Cache-Control':'no-store'}).end(await readFile(f));}catch{res.writeHead(404).end();}});await new Promise(r=>server.listen(0,'127.0.0.1',r));base='http://127.0.0.1:'+server.address().port;}
 try{
  for(const type of [chromium,webkit]){
   const browser=await type.launch();let page;
@@ -17,11 +17,11 @@ try{
    const shot=async(name)=>page.screenshot({path:out+'/'+type.name()+'-'+name+'.png',fullPage:true});
    const poses=async()=>page.locator('#pet-body .pc-frame').evaluateAll(gs=>gs.filter(g=>getComputedStyle(g).display!=='none'&&Number(getComputedStyle(g).opacity)>.5).map(g=>g.dataset.pose));
    await run('healthy');
-   assert.equal(await page.locator('#pet-body svg').getAttribute('data-art'),'character-polish-20260921-01');
+   assert.equal(await page.locator('#pet-body svg').getAttribute('data-art'),'catalog-face-20260921-01');
    const box=await page.locator('#pet-body svg').boundingBox();assert.equal(box.width,160);assert.equal(box.height,176);
    assert.equal(await page.locator('[data-menu]').count(),9);assert.ok((await poses()).length>0);
    const atlas=await page.evaluate(async()=>{
-    const img=new Image();img.src='./mame-sheet.png?v=character-polish-20260921-01';await img.decode();
+    const img=new Image();img.src='./mame-sheet.png?v=catalog-face-20260921-01';await img.decode();
     const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0);const p=ctx.getImageData(0,0,c.width,c.height).data;
     const colors=new Set(),alpha=new Set();for(let i=0;i<p.length;i+=4){alpha.add(p[i+3]);if(p[i+3])colors.add([p[i],p[i+1],p[i+2]].join(','));}
     function signature(x,y){const a=ctx.getImageData(x,y,40,44).data;let h=2166136261;for(const v of a)h=Math.imul(h^v,16777619);return h>>>0;}

@@ -1,0 +1,15 @@
+/* Catalog pictures are illustrations, not pixel sprites. Preserve the whole frame. */
+.catalog-picture{display:block;position:relative;isolation:isolate;background:#f3eedf;overflow:hidden;min-height:145px;aspect-ratio:4/5;color:#42543b}
+.catalog-picture img{display:block!important;width:100%!important;height:100%!important;position:absolute;inset:0;object-fit:contain!important;image-rendering:auto!important;max-height:none!important;margin:0!important}
+.catalog-picture:not([data-image-state='ready']) img{visibility:hidden}
+.catalog-picture[data-image-state='ready'] .catalog-image-status{display:none}
+.catalog-image-status{position:absolute;inset:0;display:grid!important;place-items:center;padding:16px!important;font-size:12px!important;line-height:1.7;min-height:0!important;text-align:center;pointer-events:none}
+.catalog-picture[data-image-state='ready'] .catalog-image-status{display:none!important}
+.catalog-full{width:100%;height:min(54dvh,600px);aspect-ratio:auto;min-height:190px}
+.capture-peek .catalog-picture{height:180px;aspect-ratio:auto;min-height:160px;padding:0}
+.creature-card .catalog-picture{height:170px;aspect-ratio:auto;min-height:135px}
+.catalog-dev-tools{padding:10px;background:#e5ead6;border:1px dashed #8b9a73;border-radius:6px;margin-bottom:12px;font-size:11px}
+.catalog-dev-tools p{margin:0 0 8px;font-size:11px;line-height:1.6}.catalog-dev-tools button,.catalog-retry{min-height:44px;padding:9px 12px;border:1px solid #83946b;background:#f8f3e4;border-radius:5px;color:#33432b;font:inherit;font-size:12px;max-width:100%}
+.catalog-dev-tools button{margin:2px}.catalog-dev-tools output{display:block;font-size:11px;line-height:1.6;margin-top:6px}.catalog-retry{display:block;margin:8px auto}
+.creature-card small{padding-inline:5px;line-height:1.6}.creature-card{color:#33432b}.creature-detail{max-width:620px;margin-inline:auto}
+@media(max-width:359px){.creature-card .catalog-picture{height:130px}.catalog-full{min-height:160px}.catalog-dev-tools button{font-size:11px}}
