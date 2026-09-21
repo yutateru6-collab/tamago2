@@ -19,7 +19,7 @@ function watchImage(img) {
   const label = box.querySelector('.catalog-image-status');
   const set = (state,message) => {box.dataset.imageState = state; label.textContent = message;};
   const loaded = () => {if(img.naturalWidth > 0){clearTimeout(timer);set('ready','');img.dataset.decoded='true';}};
-  const delayed = () => {clearTimeout(timer);timer=setTimeout(()=>{if(img.isConnected && !img.naturalWidth)set('slow','読み込みに時間がかかっています。タップして再試行できます。');},8000);};
+  const delayed = () => {clearTimeout(timer);timer=setTimeout(()=>{if(img.isConnected && !img.naturalWidth)set('slow','読み込みに時間がかかっています。詳細画面で再試行できます。');},8000);};
   const failed = () => {
     clearTimeout(timer);
     if(!fallback){fallback=true;set('loading','元の画像を読み込んでいます…');img.src=imageURL(img.dataset.catalogId,'original');delayed();}
@@ -63,6 +63,9 @@ export function createCatalog({state,dev=false}) {
       body.innerHTML=`${dev?`<div class="catalog-dev-tools"><p>開発用：画像の見本と、実際の捕獲記録は別です。</p><button data-catalog-action="preview" aria-pressed="${preview}">${preview?'全画像を表示中':'捕獲済みのみ表示中'}</button><button data-catalog-action="check">6種類の画像をチェック</button><output id="catalog-check-result" aria-live="polite">${lastCheck?`${lastCheck.filter(r=>r.ok).length}/6種類 読み込み成功`:''}</output></div>`:''}<p>${s.world.captures.length} / ${CREATURES.length}種類を発見${showAll?' · 未発見の画像も検証表示':''}</p><div class="creature-grid">${CREATURES.map(c=>{const found=s.world.captures.some(v=>v.id===c.id),shown=found||showAll;return `<button class="creature-card ${found?'':'undiscovered'}" ${shown?`data-catalog-open="${c.id}"`:'disabled'} aria-label="${shown?esc(c.name):'未発見 '+esc(AREAS[c.area])}">${shown?catalogPicture(c.id):'<span class="unknown-creature">?</span>'}<strong>${shown?esc(c.name):'まだ見ぬ生き物'}</strong><small>${found?'発見済み':showAll?'未捕獲・見本':'未発見・探索で画像が開きます'}</small><small>${esc(AREAS[c.area])}</small></button>`;}).join('')}</div><p class="panel-small">「たんけん」で行き先を選んでひと休み。帰宅時の確認後、出会えた生き物の画像が図鑑に残ります。</p>`;
     }
     if(!dialog.open)dialog.showModal();
+    // A long list must not leave a newly opened portrait scrolled past its title.
+    dialog.scrollTop=0;body.scrollTop=0;
+    dialog.querySelector('[data-action="close-catalog"]')?.focus({preventScroll:true});
   }
   async function check() {
     if(!dev||checking)return;checking=true;
