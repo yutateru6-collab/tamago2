@@ -1,4 +1,4 @@
-name: Verify Hitoiki Character Artwork
+name: Verify Hitoiki Catalog and Face
 on:
   push:
   pull_request:
@@ -23,6 +23,8 @@ jobs:
       - run: sudo apt-get install -y fonts-noto-cjk
       - name: Actual sprites, expressions, meals, sleep and ten evolution looks
         run: npm run test:character
+      - name: Full catalog, no lost captures, offline retry and pixel eye alignment
+        run: npm run test:catalog
       - name: Existing 62-case developer lab and saved-data regression tests
         run: npm run test:lab
       - name: Validate deployment build
@@ -35,12 +37,13 @@ jobs:
         env:
           BASE_URL: https://tamago2.itisnowornever271.workers.dev
         run: |
+          npm run test:catalog
           npm run test:character
           npm run test:lab
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: hitoiki-character-verification
+          name: hitoiki-catalog-face-verification
           path: |
             dist/
             verification/
@@ -51,4 +54,7 @@ jobs:
             scripts/install-character.mjs
             scripts/check-character.mjs
             scripts/check-lab.mjs
+            scripts/check-catalog.mjs
+            scripts/install-catalog.mjs
+            docs/catalog-diagnosis.md
           retention-days: 14

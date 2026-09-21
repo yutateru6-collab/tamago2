@@ -1,11 +1,12 @@
-name: Diagnose catalog image delivery
+name: Generate corrected catalog and face assets
 on:
   push:
     branches: [fix/catalog-images-face]
+    paths: [art/mame/build.py, scripts/generate-catalog.py, .github/workflows/catalog-diagnosis.yml]
 permissions:
-  contents: read
+  contents: write
 jobs:
-  diagnose:
+  generate:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -13,21 +14,33 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Probe actual production images and record source snapshot
-        run: |
-          mkdir -p diagnosis/live
-          git archive HEAD > diagnosis/source.tar
-          node --input-type=module <<'NODE'
-          import {writeFile} from 'node:fs/promises';
-          import {createHash} from 'node:crypto';
-          const base='https://tamago2.itisnowornever271.workers.dev/';
-          const paths=['version.json','app.js','world.js','life.css','index.html','creatures/2.png','creatures/3.png','creatures/5.png','creatures/7.png','creatures/10.png','creatures/12.png'];
-          const results=[];
-          for(const p of paths){try{const r=await fetch(base+p+'?diagnosis='+Date.now(),{signal:AbortSignal.timeout(20000)});const b=Buffer.from(await r.arrayBuffer());await writeFile('diagnosis/live/'+p.replaceAll('/','-'),b);results.push({path:p,status:r.status,type:r.headers.get('content-type'),bytes:b.length,png:b.subarray(0,8).toString('hex')==='89504e470d0a1a0a',sha256:createHash('sha256').update(b).digest('hex')});}catch(e){results.push({path:p,error:e.message});}}
-          await writeFile('diagnosis/results.json',JSON.stringify(results,null,2));console.log(JSON.stringify(results,null,2));
-          NODE
-      - uses: actions/upload-artifact@v4
+      - uses: actions/setup-python@v5
         with:
-          name: catalog-diagnosis
-          path: diagnosis/
+          python-version: '3.12'
+      - run: python -m pip install Pillow==11.3.0
+      - name: Load the pinned existing art tool
+        run: |
+          mkdir -p art/tools
+          BASE=https://raw.githubusercontent.com/Gamezxz/pixel-art-studio/f8c246635c4621a6c2b427833149afdc3dc3c719
+          curl --fail --location "$BASE/scripts/pixelstudio.py" -o art/tools/pixelstudio.py
+          curl --fail --location "$BASE/LICENSE" -o art/tools/LICENSE
+      - run: node preview-build.mjs
+      - run: python art/mame/build.py
+      - run: python scripts/generate-catalog.py
+      - name: Commit only generated assets on the repair branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/mame-sheet.png assets/mame-sheet.json assets/catalog/
+          if ! git diff --cached --quiet; then
+            git commit -m 'Generate aligned-eye sprite atlas and verified catalog image variants'
+            git push origin HEAD:fix/catalog-images-face
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: corrected-catalog-face-assets
+          path: |
+            assets/
+            art/mame/generated/
           retention-days: 7
