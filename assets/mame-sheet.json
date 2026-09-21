@@ -1,0 +1,54 @@
+{
+  "cell": {
+    "width": 40,
+    "height": 44
+  },
+  "poses": [
+    "idle",
+    "breathe",
+    "blink",
+    "glance",
+    "happy",
+    "ready",
+    "eat-a",
+    "eat-b",
+    "bow",
+    "sleep",
+    "sick",
+    "refuse",
+    "stretch",
+    "wave",
+    "step-a",
+    "step-b"
+  ],
+  "looks": [
+    "neutral-0",
+    "good-1",
+    "good-2",
+    "good-3",
+    "good-4",
+    "good-5",
+    "bad-1",
+    "bad-2",
+    "bad-3",
+    "bad-4",
+    "bad-5",
+    "egg",
+    "departed"
+  ],
+  "palette": [
+    "#33432b",
+    "#748658",
+    "#afc28b",
+    "#edf2ce"
+  ],
+  "anchor": [
+    20,
+    40
+  ],
+  "sheet": {
+    "width": 640,
+    "height": 572
+  },
+  "sha256": "4bc1b915b88a40976853c5733f0b4ca422c88fdcdc1ef58a8fa8a1bc7c61a132"
+}
