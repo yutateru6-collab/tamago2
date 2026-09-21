@@ -1,0 +1,27 @@
+name: Prepare pixel art tools
+on:
+  push:
+    branches: [feature/character-polish]
+    paths: [.github/workflows/pixel-source.yml]
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned source for inspection, not execution
+        run: |
+          mkdir -p art-tools
+          BASE=https://raw.githubusercontent.com/Gamezxz/pixel-art-studio/f8c246635c4621a6c2b427833149afdc3dc3c719
+          for p in scripts/pixelstudio.py SKILL.md LICENSE references/animation.md references/patterns.md references/validations.md references/sharp_edges.md; do
+            mkdir -p "art-tools/$(dirname "$p")"
+            curl --fail --location --max-time 30 "$BASE/$p" -o "art-tools/$p"
+          done
+          git archive HEAD -o art-tools/project-source.tar
+          sha256sum art-tools/scripts/pixelstudio.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pinned-pixel-art-tools
+          path: art-tools/
+          retention-days: 7
