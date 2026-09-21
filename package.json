@@ -1,12 +1,14 @@
 {
   "name": "tamago2",
   "private": true,
-  "version": "0.5.0",
+  "version": "0.5.1",
   "type": "module",
   "scripts": {
-    "dev": "node preview-build.mjs && node scripts/serve.mjs",
-    "build": "node preview-build.mjs",
-    "test": "node -e \"const fs=require('fs');const n=fs.readdirSync('dist',{recursive:true}).filter(x=>fs.statSync('dist/'+x).isFile()).length;if(n!==19)throw new Error('Expected 19 public files, got '+n);const v=JSON.parse(fs.readFileSync('dist/version.json','utf8'));if(v.release!=='hitoiki-life-20260921-02')throw new Error('Wrong release '+v.release);console.log('Build smoke test passed:',v.release,n+' files');\"",
+    "dev": "npm run build && node scripts/serve.mjs",
+    "build": "node preview-build.mjs && node scripts/repair-startup.mjs",
+    "test": "node -e \"const fs=require('fs');const n=fs.readdirSync('dist',{recursive:true}).filter(x=>fs.statSync('dist/'+x).isFile()).length;if(n!==19)throw new Error('Expected 19 public files, got '+n);const v=JSON.parse(fs.readFileSync('dist/version.json','utf8'));if(v.release!=='hitoiki-life-20260921-02'||v.fix!=='render-startup-20260921-01')throw new Error('Missing renderer fix');console.log('Build smoke test passed:',v.release,v.fix,n+' files');\"",
+    "test:startup": "node scripts/check-startup.mjs",
+    "verify:live": "node scripts/verify-startup-live.mjs",
     "deploy": "wrangler deploy",
     "preview": "wrangler dev"
   },
