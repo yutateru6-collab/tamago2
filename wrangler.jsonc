@@ -1,9 +1,5 @@
 {
-  "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "tamago2",
-  "compatibility_date": "2026-09-20",
-  "preview_urls": true,
-  "build": { "command": "node preview-build.mjs && node scripts/repair-startup.mjs" },
-  "assets": { "directory": "./dist" },
-  "observability": { "enabled": true }
+ "$schema":"./node_modules/wrangler/config-schema.json",
+ "name":"tamago2","compatibility_date":"2026-09-20","preview_urls":true,
+ "build":{"command":"npm run build"},"assets":{"directory":"./dist"},"observability":{"enabled":true}
 }

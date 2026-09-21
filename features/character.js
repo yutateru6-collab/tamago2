@@ -1,0 +1,31 @@
+import { evolution } from './world.js';
+const r=(x,y,w,h,c='ink')=>`<rect class="${c}" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+const g=(c,p)=>`<g class="${c}">${p}</g>`;
+export function pet(s,preview) {
+ const ph=preview&&/^(good|bad)-[1-5]$/.test(preview)?{key:preview,branch:preview.split('-')[0],level:Number(preview.at(-1)),name:preview}:evolution(s);
+ const wrap=(p,label)=>`<svg viewBox="0 0 32 38" shape-rendering="crispEdges" role="img" aria-label="${label}" data-look="${ph.key}">${p}</svg>`;
+ if(s.dead)return wrap(r(11,3,10,2)+r(10,5,12,2)+r(12,4,8,1,'cut')+g('angel',r(10,13,12,15)+r(5,16,5,5)+r(22,16,5,5)+r(12,16,8,7,'cut')+r(13,18,2,2)+r(18,18,2,2)),'おわかれした子');
+ if(!s.hatched)return wrap(g('egg-motion',r(13,7,6,2)+r(10,9,12,3)+r(8,12,16,14)+r(10,26,12,3)+r(10,13,12,12,'cut')+r(14,15,3,3)+r(16,20,3,3)),'揺れるたまご');
+ let p='';const bad=ph.branch==='bad',n=ph.level;
+ if(!bad&&n>=2)p+=g('ear ear-left',r(6,8,4,7))+g('ear ear-right',r(22,7,4,8));
+ if(!bad&&n>=3)p+=g('tail',r(25,24,4,3)+r(28,21,2,5));
+ if(!bad&&n===1)p+=r(15,6,2,7)+r(10,6,5,3)+r(17,4,5,3);
+ if(!bad&&n===4)p+=r(24,18,7,13)+r(26,20,3,8,'cut');
+ p+=r(11,12,10,2)+r(8,14,16,3)+r(6,17,20,10)+r(8,27,16,4);
+ p+=r(10,15,12,2,'cut')+r(8,17,16,9,'cut')+r(10,26,12,3,'cut');
+ p+=g('arm arm-left',r(4,21,3,6))+g('arm arm-right',r(25,20,3,6));
+ p+=g('eyes-open',bad?r(10,21,5,2)+r(19,22,4,2):r(10,18,4,6)+r(19,19,3,4)+r(11,18,1,2,'cut'));
+ p+=g('eyes-shut',r(10,22,5,1)+r(19,22,4,1))+g('eyes-delight',r(10,20,1,2)+r(11,19,3,1)+r(14,20,1,2)+r(18,20,1,2)+r(19,19,3,1)+r(22,20,1,2));
+ p+=g('mouth-rest',r(14,26,5,1)+(!bad?r(17,25,1,2,'cut'):'') )+g('mouth-eat',r(14,24,5,4));
+ if(!bad&&n===2)p+=r(8,28,16,2)+r(12,30,4,3)+r(18,30,4,3);
+ if(!bad&&n===3)p+=r(9,28,14,5)+r(11,29,10,3,'cut')+r(13,30,5,3)+r(21,25,2,8);
+ if(!bad&&n===4)p+=r(7,12,18,2)+r(10,7,12,5)+r(12,8,8,3,'cut')+r(12,28,2,5)+r(20,28,2,5);
+ if(!bad&&n===5)p+=r(4,26,3,9)+r(25,26,3,9)+r(7,31,18,3)+r(15,2,2,9)+r(11,5,10,2)+r(13,3,6,6)+r(14,4,4,4,'cut');
+ if(bad&&n===1)p+=r(15,8,2,5)+r(17,8,5,2)+r(20,10,2,3);
+ if(bad&&n===2)p+=r(11,9,3,4)+r(8,10,3,2)+r(19,10,5,2)+r(9,29,12,3)+r(18,31,5,2);
+ if(bad&&n===3)p+=r(7,28,4,6)+r(12,30,4,3)+r(22,27,3,7)+r(19,30,4,1);
+ if(bad&&n===4)p+=r(4,26,24,9)+r(7,29,18,4,'cut')+r(7,31,4,2)+r(14,31,4,2)+r(21,31,4,2);
+ if(bad&&n===5)p+=r(3,27,26,8)+r(5,24,4,3)+r(24,24,4,3)+r(7,30,18,3,'cut')+r(9,33,3,3)+r(22,33,3,2);
+ p+=g('foot foot-left',r(7,34,6,2))+g('foot foot-right',r(19,34,6,2));
+ return wrap(p,'まめ・'+ph.name);
+}
