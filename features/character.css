@@ -1,0 +1,56 @@
+/* Artwork-only changes: native 40x44 cels; no stretched or rotated pixel limbs. */
+.pixel-polish .pet-position{width:160px!important;left:calc(50% - 80px)!important;animation:none!important;transform:none!important;bottom:20px}
+.pixel-polish .pet-body,.pixel-polish .evolution-pet,.pixel-polish .evolution-pet svg{animation:none!important;transform:none!important}
+.pixel-polish .pc-character{display:block;width:100%;height:auto;overflow:hidden!important;image-rendering:pixelated;pointer-events:none;isolation:isolate}
+.pc-character image{image-rendering:pixelated}
+.pc-character .pc-frame,.pc-fallback{display:none}
+.pc-character .pc-frame-0{display:inline;animation:pc-base 12s step-end infinite}
+.pc-character .pc-frame-1{display:inline;opacity:0;animation:pc-breathe 12s step-end infinite}
+.pc-character .pc-frame-2{display:inline;opacity:0;animation:pc-blink 12s step-end infinite}
+.pc-character .pc-frame-3{display:inline;opacity:0;animation:pc-glance 12s step-end infinite}
+.pc-character .pc-frame-13{display:inline;opacity:0;animation:pc-wave 12s step-end infinite}
+@keyframes pc-base{0%,45%,65%,85%,95%,100%{opacity:1}28%,63.6%,76%,90%{opacity:0}}
+@keyframes pc-breathe{0%,45%,100%{opacity:0}28%{opacity:1}}
+@keyframes pc-blink{0%,65%,100%{opacity:0}63.6%{opacity:1}}
+@keyframes pc-glance{0%,85%,100%{opacity:0}76%{opacity:1}}
+@keyframes pc-wave{0%,95%,100%{opacity:0}90%{opacity:1}}
+.pixel-polish .lcd:not([data-motion='']) .pc-frame{display:none;animation:none;opacity:1}
+.pixel-polish .lcd:is([data-motion='evolve'],[data-motion='decline'],[data-motion='sleep']) .pc-frame-0{display:inline}
+.pixel-polish .lcd[data-reaction='ready'] .pc-frame-5{display:inline}
+.pixel-polish .lcd[data-reaction='eat'] .pc-frame-6{display:inline;animation:pc-chew-a .64s step-end infinite}
+.pixel-polish .lcd[data-reaction='eat'] .pc-frame-7{display:inline;animation:pc-chew-b .64s step-end infinite}
+.pixel-polish .lcd:is([data-reaction='happy'],[data-reaction='relief']) .pc-frame-4{display:inline}
+.pixel-polish .lcd[data-reaction='bow'] .pc-frame-8{display:inline}
+.pixel-polish .lcd[data-reaction='look'] .pc-frame-3{display:inline}
+.pixel-polish .lcd[data-motion='refuse'] .pc-frame-11{display:inline}
+.pixel-polish .lcd[data-reaction='medicine'] .pc-frame-10{display:inline}
+.pixel-polish .lcd[data-motion='toilet'] .pc-frame-4{display:inline}
+.pixel-polish .lcd[data-motion='pet'] .pc-frame-13{display:inline;animation:pc-chew-a .8s step-end infinite}
+.pixel-polish .lcd[data-motion='pet'] .pc-frame-4{display:inline;animation:pc-chew-b .8s step-end infinite}
+.pixel-polish .lcd[data-motion='wake'] .pc-frame-12{display:inline}
+@keyframes pc-chew-a{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes pc-chew-b{0%,100%{opacity:0}50%{opacity:1}}
+.pixel-polish .lcd[data-sick='true'][data-motion=''] .pc-frame{display:none;animation:none;opacity:1}
+.pixel-polish .lcd[data-sick='true'][data-motion=''] .pc-frame-10{display:inline}
+.pixel-polish .lcd[data-sleeping='true'] .pc-frame{display:none;animation:none;opacity:1}
+.pixel-polish .lcd[data-sleeping='true'] .pc-frame-9{display:inline}
+.pc-character[data-kind^='bad'] .pc-frame-13{display:none}
+.pc-character[data-kind^='bad'] .pc-frame-0{animation:pc-bad-base 12s step-end infinite}
+@keyframes pc-bad-base{0%,45%,65%,85%,100%{opacity:1}28%,63.6%,76%{opacity:0}}
+.pc-character:is([data-kind='departed'],[data-kind='egg']) .pc-frame{display:none;animation:none;opacity:1}
+.pc-character:is([data-kind='departed'],[data-kind='egg']) .pc-frame-0{display:inline;animation:pc-chew-a 3.6s step-end infinite}
+.pc-character:is([data-kind='departed'],[data-kind='egg']) .pc-frame-1{display:inline;animation:pc-chew-b 3.6s step-end infinite}
+.pixel-polish .event-vignette .pc-frame{display:none;animation:none;opacity:1}
+.pixel-polish .event-vignette .pc-frame-0{display:inline}
+.pixel-polish .event-vignette[data-activity='meal'] .pc-frame-0{display:none}
+.pixel-polish .event-vignette[data-activity='meal'] .pc-frame-6{display:inline;animation:pc-chew-a .64s step-end infinite}
+.pixel-polish .event-vignette[data-activity='meal'] .pc-frame-7{display:inline;animation:pc-chew-b .64s step-end infinite}
+.pixel-polish .event-vignette[data-activity='nap'] .pc-frame-0{display:none}
+.pixel-polish .event-vignette[data-activity='nap'] .pc-frame-9{display:inline}
+.pixel-polish .evolution-pet{width:120px!important;margin-inline:auto}
+.pixel-polish .evolution-card{overflow:hidden}
+.pixel-art-fallback .pc-frame{display:none!important}
+.pixel-art-fallback .pc-fallback{display:inline}
+.pixel-away .pc-frame{animation-play-state:paused!important}
+@media(max-width:360px),(max-height:620px){.pixel-polish .pet-position{width:120px!important;left:calc(50% - 60px)!important}.pixel-polish .evolution-pet{width:80px!important}}
+@media(prefers-reduced-motion:reduce){.pixel-polish .pc-frame{animation:none!important}.pixel-polish .pc-frame-0{opacity:1}.pixel-polish .pc-frame-1,.pixel-polish .pc-frame-2,.pixel-polish .pc-frame-3,.pixel-polish .pc-frame-13{opacity:0}.pixel-polish .lcd[data-reaction='eat'] .pc-frame-6{opacity:1}.pixel-polish .lcd[data-reaction='eat'] .pc-frame-7{display:none}.pixel-polish .lcd[data-motion='pet'] .pc-frame-13{display:none}.pixel-polish .lcd[data-motion='pet'] .pc-frame-4{opacity:1}.pixel-polish .pc-character:is([data-kind='departed'],[data-kind='egg']) .pc-frame-1{display:none}}
