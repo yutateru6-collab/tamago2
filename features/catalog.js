@@ -14,7 +14,7 @@ export function catalogPicture(id, variant = 'thumb') {
 const watching = new WeakMap();
 function watchImage(img) {
   if (watching.has(img)) return;
-  let timer, fallback = false;
+  let timer, fallback = false, retryToken = '';
   const box = img.closest('.catalog-picture'); if (!box) return;
   const label = box.querySelector('.catalog-image-status');
   const set = (state,message) => {box.dataset.imageState = state; label.textContent = message;};
@@ -22,10 +22,11 @@ function watchImage(img) {
   const delayed = () => {clearTimeout(timer);timer=setTimeout(()=>{if(img.isConnected && !img.naturalWidth)set('slow','読み込みに時間がかかっています。詳細画面で再試行できます。');},8000);};
   const failed = () => {
     clearTimeout(timer);
-    if(!fallback){fallback=true;set('loading','元の画像を読み込んでいます…');img.src=imageURL(img.dataset.catalogId,'original');delayed();}
+    if(!fallback){fallback=true;set('loading','元の画像を読み込んでいます…');img.src=imageURL(img.dataset.catalogId,'original')+retryToken;delayed();}
     else {img.dataset.decoded='false';set('error','画像を読み込めませんでした。再試行してください。');}
   };
-  watching.set(img, {retry(){fallback=false;delete img.dataset.decoded;set('loading','画像を再読み込み中…');img.src=imageURL(img.dataset.catalogId,img.dataset.variant)+'&retry='+Date.now();delayed();}});
+  // Explicit retry refreshes BOTH variants, including WebKit's decoded-image cache.
+  watching.set(img, {retry(){fallback=false;retryToken='&retry='+Date.now();delete img.dataset.decoded;set('loading','画像を再読み込み中…');img.src=imageURL(img.dataset.catalogId,img.dataset.variant)+retryToken;delayed();}});
   img.addEventListener('load',loaded);img.addEventListener('error',failed);delayed();
   if(img.complete){if(img.naturalWidth)loaded();else failed();}
 }
